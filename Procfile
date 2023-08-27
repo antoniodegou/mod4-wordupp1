@@ -1,1 +1,1 @@
-web: gunicorn wordupp-mod4-b.wsgi
+web: gunicorn wordupp.wsgi
