@@ -141,3 +141,7 @@ ALLOWED_HOSTS = ['wordupp-mod4-b-e569fbdc5d28.herokuapp.com', 'localhost', '127.
 # Read environment variables
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+
+LOGIN_URL = 'login'
+
+ 

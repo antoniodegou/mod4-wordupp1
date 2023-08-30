@@ -17,10 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+from django.contrib.auth.views import LoginView  # Import here, not in settings.py
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
     path('admin/', admin.site.urls),
     path('subscription/', include('subscription.urls')),  # Add this line
+    path('accounts/login/', LoginView.as_view(), name='login'),
 ]
