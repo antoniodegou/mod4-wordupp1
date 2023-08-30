@@ -35,15 +35,28 @@ class Canvas(models.Model):
         return self.name
 
 class Subscription(models.Model):
-    SUBSCRIPTION_CHOICES = [
-        ('free', 'Free'),
+    SUBSCRIPTION_TYPE_CHOICES = [
+        ('basic', 'Basic'),
         ('premium', 'Premium'),
     ]
 
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    subscription_type = models.CharField(max_length=10, choices=SUBSCRIPTION_CHOICES, default='free')
-    start_date = models.DateTimeField(auto_now_add=True)
-    end_date = models.DateTimeField(null=True, blank=True)
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    ]
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='subscription')
+    subscription_type = models.CharField(max_length=20, choices=SUBSCRIPTION_TYPE_CHOICES, default='basic')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='inactive')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    
+# Saved Work Model
+class SavedWork(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='saved_works')
+    canvas_data = models.JSONField()  # You can choose the appropriate field type based on your data
+    creation_date = models.DateTimeField(auto_now_add=True)
+    last_modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.subscription_type}"
+        return f"{self.user.username}'s saved work"
