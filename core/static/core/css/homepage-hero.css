@@ -1,0 +1,80 @@
+ 
+
+#hero {
+    /* font-family: Arial, sans-serif; */
+    padding: 2rem;
+}
+
+.word-grid {
+    /* padding: 0 0rem ; */
+     /* margin-right: 5rem; */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 6 columns */
+    gap: 0px;
+    justify-items: center;
+    width: 40%;
+    box-shadow: var(--shadow);
+
+}
+
+.word {
+    font-size: 1vw;
+    text-align: center;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    /* text-transform: uppercase; */
+    font-weight: 900;transition: all 1s;
+}
+
+
+/* Keyframe Animations */
+/* ... (previous styles remain unchanged) ... */
+
+/* ... (previous styles remain unchanged) ... */
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+@keyframes slideIn {
+    0% { transform: translateY(100%); opacity: 0; }
+    50% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-100%); opacity: 0; }
+}
+/* @keyframes rotateIn {
+    0% { transform: rotate(0deg); opacity: 0; }
+    50% { transform: rotate(360deg); opacity: 1; }
+    100% { transform: rotate(720deg); opacity: 0; }
+} */
+/* @keyframes slideRotate {
+    0% { transform: translateY(100%) rotate(0deg); opacity: 0; }
+    50% { transform: translateY(0) rotate(360deg); opacity: 1; }
+    100% { transform: translateY(-100%) rotate(720deg); opacity: 0; }
+}
+
+ */
+@keyframes rotate3D {
+    0% { transform: perspective(500px) rotate3d(1,0, 0, 0deg); opacity: 0; }
+    50% { transform: perspective(500px) rotate3d(1, 0, 0, 180deg); opacity: 1; }
+    100% { transform: perspective(500px) rotate3d(1, 0,0, 360deg); opacity: 0; }
+}
+
+/* ... (previous styles remain unchanged) ... */
+
+@media (max-width: 768px) {
+    .word-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .word {
+        font-size: 1.2rem;
+    }
+}
+
+
+
+
+
+ 

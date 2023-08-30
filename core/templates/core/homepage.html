@@ -1,19 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{% extends "core/base.html" %}
+{% load static %} 
+
+
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'core/css/homepage-hero.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/homepage-features.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/homepage-price.css' %}">
+    <script src="{% static 'core/js/hero.js' %}"></script>
+    <script src="{% static 'core/js/features.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- <link rel="stylesheet" href="{% static 'core/css/hero.css' %}"> -->
     <!-- Hero Section -->
-<section id="hero">
-    <h1>Craft Stunning Textual Imagery for Social Media</h1>
-    <p>Elevate your content game with wordUpp - the premier tool for creating mesmerizing text visuals tailor-made for the social realm. From tweets to stories, make every word count.</p>
+<section id="hero" class="container-fluid py-3 mt-5 mb-5 pt-5 pb-5">
+        <div class="row align-items-center justify-content-between">
+            <div class="content col-md-6">
+                <h1  >Craft Stunning<span class="icon-heart c-pink"></span> Textual<span class="icon-textsms c-yellow"></span> Imagery<span class="icon-camera c-red"></span> for Social Media</h1>
+                <p  >Elevate your content game with wordUpp - the premier tool for creating mesmerizing text visuals tailor-made for the social realm. From tweets to stories, make every word count.</p>
+            </div>
+            <div class="word-grid col col-md-6 p-5 black-border">
+                <!-- JavaScript will populate this grid -->
+            </div>
+        </div>
 </section>
 
 <!-- Features Section -->
-<section id="features">
+<!-- <section id="features">
     <h2>Features</h2>
     <ul>
         <li><strong>Dynamic Canvas:</strong> Begin with a blank slate and let your imagination run wild. Craft, customize, and captivate.</li>
@@ -21,10 +37,68 @@
         <li><strong>Dazzling Text Effects:</strong> Make your words shimmer, glow, and pop with our array of unique text effects.</li>
         <li><strong>Interactive Design Elements:</strong> Drag, drop, design. Our intuitive interface ensures your creation process is seamless.</li>
     </ul>
+ 
+    
+</section> -->
+
+<!-- Features Section -->
+<section id="features" class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Features</h2>
+        <div class="row">
+            <!-- Dynamic Canvas Card -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="   dynamic-canvas">
+                        <span class="type-text">Blank__</span>
+                        <!-- <span class="cursor">|</span> -->
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title"><strong>Dynamic Canvas</strong></h5>
+                        <p class="card-text">Begin with a blank slate and let your imagination run wild. Craft, customize, and captivate.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Predefined Sizes Card -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-animation predefined-sizes black-border ms-3 mt-3" data-icon="&#xe001; " class="down-arrow">
+                        <span>A</span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title "><strong>Predefined Sizes</strong></h5>
+                        <p class="card-text">Perfectly sized for every platform. Whether it's a tweet, an Instagram story, or a Facebook post, we've got you covered.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Dazzling Text Effects Card -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div id="text-effects" class="card-animation">
+                        <div class="txt-grid">
+                          <div class="txt">Txt</div>
+                          <div class="txt">Txt</div>
+                          <div class="txt">Txt</div>
+                          <div class="txt">Txt</div>
+                          <div class="txt">Txt</div>
+                          <div class="txt">Txt</div>
+                        </div>
+                      </div>
+                      
+                    <div class="card-body">
+                        <h5 class="card-title"><strong>Dazzling Text Effects</strong></h5>
+                        <p class="card-text">With the brush tool , alter individual size, color or Transparency</p>
+                    </div>
+                </div>
+            </div>
+ 
+        </div>
+    </div>
 </section>
 
+
 <!-- Subscription Model Section -->
-<section id="subscription">
+<!-- <section id="subscription">
     <h2>Unleash Your Creativity with wordUpp Premium</h2>
     <p>Dive into the full wordUpp experience. Save, share, and shine with our premium subscription. Every design, every platform, every time.</p>
     <ul>
@@ -33,20 +107,44 @@
     </ul>
     <button>Start for Free</button>
     <button>Upgrade to Premium</button>
+</section> -->
+
+
+<section id="subscription" class="text-center py-5 mb-4">
+    <h2>Unleash Your Creativity with wordUpp Premium</h2>
+    <p class="mb-5">Dive into the full wordUpp experience. Save, share, and shine with our premium subscription. Every design, every platform, every time.</p>
+    <div class="row">
+        <!-- Free Model Card -->
+        <div class="col-md-6">
+            <div class="card rounded-0 ">
+                <div class="card-header bg-black text-white rounded-0 ">
+                    <h4><span class="icon-gift me-2 c-pink"></span>Free Model</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">$0/month</h5>
+                    <p class="card-text">Dive into the world of textual design. No cost, no strings attached.</p>
+                    <button class="btn btn-primary rounded-0 bg-yellow">Start for Free</button>
+                </div>
+            </div>
+        </div>
+        <!-- Premium Subscription Card -->
+        <div class="col-md-6  ">
+            <div class="card rounded-0 ">
+                <div class="card-header bg-black text-white rounded-0">
+                    <h4><span class="icon-star me-2 c-red"></span>Premium Subscription</h4>
+                </div>
+                <div class="card-body ">
+                    <h5 class="card-title">$1.99/month</h5>
+                    <p class="card-text">Save your masterpieces. A world of premium features awaits.</p>
+                    <button class="btn btn-primary rounded-0 bg-yellow">Upgrade to Premium</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
-<!-- Testimonials Section -->
-<section id="testimonials">
-    <h2>What Our Users Say</h2>
-    <blockquote>"wordUpp transformed the way I approach content creation. Every post is now a piece of art." - <cite>Digital Marketer</cite></blockquote>
-    <blockquote>"With wordUpp, my social feeds have never looked better. It's a game-changer!" - <cite>Influencer</cite></blockquote>
-</section>
 
-<!-- Footer -->
-<footer>
-    <p>Explore, design, dazzle. Join the wordUpp community today.</p>
-    <a href="#">Contact Us</a> | <a href="#">Terms &amp; Conditions</a> | <a href="#">Privacy Policy</a>
-</footer>
+ 
 
-</body>
-</html>
+{% endblock %}
+<link rel="stylesheet" href="{% static 'core/js/hero.js' %}">

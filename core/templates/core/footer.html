@@ -1,0 +1,46 @@
+<!-- HTML -->
+<style>
+    /* CSS */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.footer {
+  margin-top: auto;
+}
+
+</style>
+
+<footer class="footer mt-auto py-3 bg-black text-white mt-5 d-flex justify-content-between">
+    <div class="container">
+      <div class="row w-100 text-center">
+        <div class="col-md-12">
+            <!-- Links -->
+            <ul class="list-unstyled text-white">
+              <li><a href="#" class="text-muted text-white">Contact</a></li>
+              <li><a href="#" class="text-muted text-white">Terms and Conditions</a></li>
+              <li><a href="#" class="text-muted text-white">Privacy Policy</a></li>
+            </ul>
+          </div>
+        <div class="col-md-12">
+          <!-- Copyright -->
+          <p class="text-muted text-white">&copy; <span id="current-year"></span> wordUpp. All rights reserved.</p>
+        </div>
+
+ 
+      </div>
+    </div>
+  </footer>
+
+  
+  <script>
+    // JavaScript
+document.addEventListener('DOMContentLoaded', (event) => {
+  const yearElement = document.getElementById('current-year');
+  const currentYear = new Date().getFullYear();
+  yearElement.textContent = currentYear;
+});
+
+  </script>

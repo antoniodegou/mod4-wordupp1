@@ -1,0 +1,24 @@
+/* Hover animation for the card */
+.card{
+    transform: scale(1);
+    box-shadow: none;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease-in-out,  box-shadow 0.3s ease-in-out;
+}
+
+/* Change header background color on hover */
+.card:hover .card-header {
+    background-color: #f2f2f2;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Button hover effect */
+.card .btn:hover {
+    margin-top: -5px;
+    transition: margin-top 0.2s ease-in-out;
+}
+

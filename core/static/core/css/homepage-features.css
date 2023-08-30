@@ -1,0 +1,109 @@
+#features .card {
+    border: none;
+    transition: transform .2s;
+}
+
+#features .card:hover {
+    transform: scale(1.05);
+}
+
+
+.card-animation {
+    height: 100px;
+    display: flex;
+    /* align-items: center;
+    justify-content: center; */
+}
+
+.predefined-sizes {
+    animation: predefined-sizes-animation 2s infinite alternate;
+    background-color: var(--yellow);
+    color: var(--white);
+ 
+}
+
+.predefined-sizes span {
+    font-size: 2rem;
+}
+
+@keyframes predefined-sizes-animation {
+    0% {
+        width: 100px;
+        height: 100px;
+    }
+    100% {
+        width: 200px;
+        height: 100px;
+    }
+}
+
+
+/* DEMO-SPECIFIC STYLES */
+/* Existing CSS */
+/* ... */
+
+/* Additional CSS for typewriter effect */
+.dynamic-canvas {
+    margin-bottom:calc( 100px - 2rem);
+    margin-top:1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: .2em solid var(--red); /* Cursor */
+    width: 0;
+    animation: typing 3s steps(8, end) infinite;
+}
+.type-text{
+    font-size: 1.5rem;
+    padding:1rem;
+    font-weight: 900;
+    color:var(--red);
+
+     }
+@keyframes typing {
+    0%, 100% {
+        width: 0;
+    }
+    50% {
+        width: 7em;  /* Width of the word "blank" */
+    }
+}
+
+@keyframes blink {
+    50% {
+        border-color: transparent;
+    }
+}
+
+
+/*
+
+text effects
+*/
+:root {
+    --pink: #E19591;
+    --red: #E05745;
+    --yellow: #EEA932;
+  }
+/* Custom Colors */
+/* Grid for Text Effects */
+.txt-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);  /* 3 columns */
+    grid-template-rows: repeat(2, 1fr);  /* 2 rows */
+    grid-gap: 1px;
+    font-weight: 900;
+    justify-content: flex-start; 
+    margin-left: 1rem;
+    margin-top: 1rem;
+  }
+  
+  /* Text Styling */
+  .txt {
+    font-size: 2rem;
+    text-align: center;
+    transition: color 1s ease;
+    text-align: left;
+    justify-content: flex-start; 
+  }
+
+

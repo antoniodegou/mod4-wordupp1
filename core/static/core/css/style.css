@@ -1,0 +1,64 @@
+:root {
+    --pink: #E19591;
+    --red: #E05745;
+    --yellow:#EEA932;
+    --white: #f4f4f4;
+    --black: #090909;
+    --lineWidth: 3px;
+    --shadow:  0 10px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19) !important;
+}
+
+html,body{
+    font-family: 'Noto Sans', sans-serif;
+    background-color: var(--white);
+    color:var(--black);
+}
+
+.c-pink{
+    color: var(--pink);
+}
+
+.c-red{
+    color: var(--red);
+}
+
+.c-yellow{
+    color: var(--yellow);
+}
+
+.bg-yellow{
+    background-color: var(--yellow)!important;
+}
+
+.bg-black{
+    background-color: var(--black);
+}
+
+.text-white, nav a{
+    color:var(--white)!important;
+}
+
+.black-border{
+    border: var(--black) var(--lineWidth) solid!important;
+}
+
+.make-bold{
+    font-weight: 900;
+}
+
+.navbar-brand, h1, h2,h3, h4{
+    font-family: 'Noto Sans', sans-serif;
+    text-transform: none;
+    font-weight: 900;
+}
+
+
+
+nav a, .btn, footer a, footer p{
+    font-family: 'Roboto Condensed', sans-serif;
+    text-transform: uppercase;
+}
+
+.btn{
+    --bs-btn-border-color:unset;
+}
