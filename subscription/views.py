@@ -85,3 +85,7 @@ def register_view(request):
 @login_required
 def dashboard_view(request):
     return render(request, 'dashboard.html')
+
+@login_required
+def profile_view(request):
+    return render(request, 'profile.html')
