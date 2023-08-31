@@ -1,9 +1,7 @@
 from django import forms
-from .models import Subscription
+from .models import Subscription  # Import your model here
 
 class SubscriptionForm(forms.ModelForm):
     class Meta:
         model = Subscription
-        fields = [ 'start_date', 'end_date']
-
-
+        fields = ['is_premium']  # Include is_premium here

@@ -1,9 +1,15 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+# from django.contrib import messages
 from django.db import models
 from django.conf import settings  # Import settings to get the custom user model
-from django.utils import timezone
-
+from django.contrib.auth.models import User
+from datetime import datetime, timedelta
+# from django.shortcuts import render, redirect
+# from .forms import SubscriptionForm  # Importing SubscriptionForm from forms.py
+# from .models import Subscription 
+# from .forms import SubscriptionForm
 
 class CustomUser(AbstractUser):
     # You can add additional fields here if needed
@@ -38,23 +44,7 @@ class Canvas(models.Model):
     def __str__(self):
         return self.name
 
-class Subscription(models.Model):
-    SUBSCRIPTION_TYPE_CHOICES = [
-        ('basic', 'Basic'),
-        ('premium', 'Premium'),
-    ]
-
-    STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-    ]
-
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='subscription')
-    subscription_type = models.CharField(max_length=20, choices=SUBSCRIPTION_TYPE_CHOICES, default='basic')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='inactive')
-    start_date = models.DateField()
-    end_date = models.DateField()
-    
+ 
 # Saved Work Model
 class SavedWork(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='saved_works')
@@ -65,33 +55,12 @@ class SavedWork(models.Model):
     def __str__(self):
         return f"{self.user.username}'s saved work"
     
-
+ 
 class Subscription(models.Model):
-    BASIC = 'basic'
-    PREMIUM = 'premium'
-    PLATINUM = 'platinum'
-
-    PLAN_CHOICES = [
-        (BASIC, 'Basic'),
-        (PREMIUM, 'Premium'),
-        (PLATINUM, 'Platinum'),
-    ]
-
-    ACTIVE = 'active'
-    INACTIVE = 'inactive'
-    CANCELLED = 'cancelled'
-
-    STATUS_CHOICES = [
-        (ACTIVE, 'Active'),
-        (INACTIVE, 'Inactive'),
-        (CANCELLED, 'Cancelled'),
-    ]
-
-    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default=BASIC)
-    start_date = models.DateField(default=timezone.now)
-    end_date = models.DateField(default=timezone.now)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Changed to settings.AUTH_USER_MODEL
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=INACTIVE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    start_date = models.DateTimeField(default=datetime.now)
+    end_date = models.DateTimeField(default=datetime.now() + timedelta(days=30))
+    is_premium = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.username}'s {self.plan} subscription"
+        return f"{self.user.username}'s Subscription"

@@ -4,11 +4,15 @@
 
 {% block content %}
 
-    <h1>Create a New Subscription</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Submit</button>
-    </form>
+<h1>Create Subscription</h1>
+<form method="post">
+  {% csrf_token %}
+  <label for="is_premium">Premium Subscription:</label>
+  <select name="is_premium" id="is_premium">
+    <option value="True">Yes</option>
+    <option value="False">No</option>
+  </select>
+  <button type="submit">Create</button>
+</form>
 
 {% endblock %}
