@@ -1,14 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Subscription</title>
-</head>
-<body>
+{% extends "core/base.html" %}
+
+{% block title %}Create a New Subscription{% endblock %}
+
+{% block content %}
+
     <h1>Create a New Subscription</h1>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Submit</button>
     </form>
-</body>
-</html>
+
+{% endblock %}
