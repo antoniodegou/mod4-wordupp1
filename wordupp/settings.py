@@ -144,4 +144,4 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 
 LOGIN_URL = 'login'
 
-LOGIN_REDIRECT_URL = '/profile/'
+LOGIN_REDIRECT_URL = '/dashboard/'
