@@ -49,23 +49,59 @@ def dashboard_view(request):
 
 
 
+# @login_required
+# def user_dashboard(request):
+#     if request.method == "POST":
+#         form = SubscriptionForm(request.POST)
+#         if form.is_valid():
+#             subscription, created = Subscription.objects.get_or_create(
+#                 user=request.user,
+#                 defaults={
+#                     'start_date': datetime.now(),
+#                     'end_date': datetime.now() + timedelta(days=30),
+#                     'is_premium': form.cleaned_data['is_premium'],
+#                 }
+#             )
+#             if not created:
+#                 subscription.is_premium = form.cleaned_data['is_premium']
+#                 subscription.start_date = datetime.now()
+#                 subscription.end_date = datetime.now() + timedelta(days=30)
+#                 subscription.save()
+
+#             messages.success(request, 'Subscription updated successfully!')
+#             return redirect('dashboard')
+#     else:
+#         form = SubscriptionForm()
+    
+#     return render(request, 'user_dashboard.html', {'form': form})
+
 @login_required
 def user_dashboard(request):
     if request.method == "POST":
         form = SubscriptionForm(request.POST)
         if form.is_valid():
+            stripe_plan_id = form.cleaned_data['stripe_plan_id']
+            
+            # Process Stripe payment if premium plan is selected
+            if stripe_plan_id == 'premium':
+                # Here, you'd normally use Stripe's API to handle the payment
+                
+                # After successful payment
+                # You'd set the Stripe Plan ID and other details
+                # Note: You'll actually do this after Stripe confirms the payment is successful.
+                pass
+            
             subscription, created = Subscription.objects.get_or_create(
                 user=request.user,
                 defaults={
                     'start_date': datetime.now(),
                     'end_date': datetime.now() + timedelta(days=30),
-                    'is_premium': form.cleaned_data['is_premium'],
+                    'stripe_plan_id': stripe_plan_id,
                 }
             )
             if not created:
-                subscription.is_premium = form.cleaned_data['is_premium']
-                subscription.start_date = datetime.now()
-                subscription.end_date = datetime.now() + timedelta(days=30)
+                # Update other fields like start_date, end_date, etc.
+                subscription.stripe_plan_id = stripe_plan_id
                 subscription.save()
 
             messages.success(request, 'Subscription updated successfully!')
@@ -74,4 +110,3 @@ def user_dashboard(request):
         form = SubscriptionForm()
     
     return render(request, 'user_dashboard.html', {'form': form})
-
