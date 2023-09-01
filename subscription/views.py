@@ -11,10 +11,12 @@ from .models import Subscription
 from datetime import datetime, timedelta
 from django.contrib import messages
 from .forms import SubscriptionForm
- 
+import os
+from dotenv import load_dotenv
 
-stripe.api_key = 'pk_test_51NkmkJCOAyay7VTL9sF0N6bNUBccALv9Qn0Do0RYuOn4UHJaaDhBsSxYW45cf2gRxSLonu7kh4rLFW84kL7OfZQ1002UaUb385'
+load_dotenv()
 
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
  # Create your views here.
 def homepage(request):
     return render(request, 'core/homepage.html')

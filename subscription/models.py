@@ -57,11 +57,20 @@ class SavedWork(models.Model):
     
  
 class Subscription(models.Model):
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_date = models.DateTimeField(default=datetime.now)
     end_date = models.DateTimeField(default=datetime.now)
     is_premium = models.BooleanField(default=False)
     stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
-    
+    STRIPE_PLAN_CHOICES = [
+        ('free_plan_id_here', 'Free'),
+        ('premium_plan_id_here', 'Premium'),
+    ]
+    stripe_plan_id = models.CharField(
+        max_length=50,
+        choices=STRIPE_PLAN_CHOICES,
+        default='free_plan_id_here',
+    )
     def __str__(self):
         return f"{self.user.username}'s Subscription"
