@@ -1,18 +1,18 @@
 from django.shortcuts import render, redirect
-from .forms import SubscriptionForm
-from django.http import HttpResponse
+ 
 from django.contrib.auth.decorators import login_required
 import stripe
 from django.contrib.auth.forms import UserCreationForm
-# from django.shortcuts import render, redirect
+ 
 from django.shortcuts import render, redirect
 from .models import Subscription 
  
 from datetime import datetime, timedelta
 from django.contrib import messages
-from .forms import SubscriptionForm
+ 
 import os
 from dotenv import load_dotenv
+from .forms import StripeSubscriptionForm
 
 load_dotenv()
 
@@ -78,7 +78,7 @@ def dashboard_view(request):
 @login_required
 def user_dashboard(request):
     if request.method == "POST":
-        form = SubscriptionForm(request.POST)
+        form = StripeSubscriptionForm(request.POST)
         if form.is_valid():
             stripe_plan_id = form.cleaned_data['stripe_plan_id']
             
@@ -107,6 +107,6 @@ def user_dashboard(request):
             messages.success(request, 'Subscription updated successfully!')
             return redirect('dashboard')
     else:
-        form = SubscriptionForm()
+        form = StripeSubscriptionForm()
     
     return render(request, 'user_dashboard.html', {'form': form})

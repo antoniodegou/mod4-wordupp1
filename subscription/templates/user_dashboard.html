@@ -41,24 +41,13 @@
   
   <!-- Subscription Tab -->
   <div class="tab-pane fade" id="subscription" role="tabpanel" aria-labelledby="subscription-tab">
-    <h2>Manage Subscription</h2>
     
-    <!-- Display Current Subscription Status -->
-    <h3>Your Current Plan: {% if user.subscription.is_premium %}Premium{% else %}Free{% endif %}</h3>
-    
-    <!-- List of Available Plans -->
-    <h3>Available Plans</h3>
-    <ul>
-      <li><strong>Free:</strong> Limited access to features.</li>
-      <li><strong>Premium ($1.99/month):</strong> Full access to all features.</li>
-    </ul>
-    
-    <!-- Upgrade/Downgrade Options -->
-    {% if user.subscription.is_premium %}
-      <button id="downgrade-button">Downgrade to Free</button>
-    {% else %}
-      <button id="upgrade-button">Upgrade to Premium</button>
-    {% endif %}
+    <h2>Create Subscription</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form }}
+      <button type="submit">Create</button>
+    </form>
     
   </div>
 
