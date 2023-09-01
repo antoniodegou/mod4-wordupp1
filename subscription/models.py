@@ -59,8 +59,9 @@ class SavedWork(models.Model):
 class Subscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_date = models.DateTimeField(default=datetime.now)
-    end_date = models.DateTimeField(default=datetime.now() + timedelta(days=30))
+    end_date = models.DateTimeField(default=datetime.now)
     is_premium = models.BooleanField(default=False)
-
+    stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
+    
     def __str__(self):
         return f"{self.user.username}'s Subscription"
