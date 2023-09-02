@@ -41,7 +41,7 @@
   
   <!-- Subscription Tab -->
   <div class="tab-pane fade" id="subscription" role="tabpanel" aria-labelledby="subscription-tab">
-    
+
     <h2>Create Subscription</h2>
     <form method="post">
       {% csrf_token %}
@@ -52,3 +52,25 @@
   </div>
 
 {% endblock %}
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    // Initialize Stripe
+    var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+    
+    document.addEventListener("DOMContentLoaded", function () {
+      var form = document.getElementById("subscription-form");
+      var stripeButton = document.getElementById("stripe-button");
+      
+      stripeButton.addEventListener("click", function () {
+        stripe.redirectToCheckout({
+          sessionId: "{{ stripe_session_id }}"
+        }).then(function (result) {
+          if (result.error) {
+            // Show error to the user
+            alert(result.error.message);
+          }
+        });
+      });
+    });
+  </script>
+  

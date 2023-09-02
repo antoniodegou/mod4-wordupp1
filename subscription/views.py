@@ -3,20 +3,24 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 import stripe
 from django.contrib.auth.forms import UserCreationForm
- 
 from django.shortcuts import render, redirect
 from .models import Subscription 
- 
 from datetime import datetime, timedelta
 from django.contrib import messages
- 
-import os
 from dotenv import load_dotenv
 from .forms import StripeSubscriptionForm
+from django.conf import settings
+from django.conf import settings
+import stripe
+import os
 
-load_dotenv()
-
+# Uncommenting the line to set the Stripe API key
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+
+
+# stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+print("lAAAAA",stripe.api_key)
+print("lBBBBB",stripe.api_key)
  # Create your views here.
 def homepage(request):
     return render(request, 'core/homepage.html')
@@ -74,7 +78,8 @@ def dashboard_view(request):
 #         form = SubscriptionForm()
     
 #     return render(request, 'user_dashboard.html', {'form': form})
-
+print("AAAAA  AAAA AAAA   AAAA")
+print("Stripe Secret Key:", settings.STRIPE_SECRET_KEY)
 @login_required
 def user_dashboard(request):
     if request.method == "POST":
@@ -85,10 +90,6 @@ def user_dashboard(request):
             # Process Stripe payment if premium plan is selected
             if stripe_plan_id == 'premium':
                 # Here, you'd normally use Stripe's API to handle the payment
-                
-                # After successful payment
-                # You'd set the Stripe Plan ID and other details
-                # Note: You'll actually do this after Stripe confirms the payment is successful.
                 pass
             
             subscription, created = Subscription.objects.get_or_create(
@@ -100,7 +101,6 @@ def user_dashboard(request):
                 }
             )
             if not created:
-                # Update other fields like start_date, end_date, etc.
                 subscription.stripe_plan_id = stripe_plan_id
                 subscription.save()
 
@@ -109,4 +109,25 @@ def user_dashboard(request):
     else:
         form = StripeSubscriptionForm()
     
-    return render(request, 'user_dashboard.html', {'form': form})
+    success_url = f"{settings.BASE_URL}/payment_success/"
+    cancel_url = f"{settings.BASE_URL}/payment_cancel/"
+
+    # Create a Stripe Checkout Session
+    checkout_session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price': 'premium',  # Replace with your actual Stripe Price ID
+            'quantity': 1,
+        }],
+        mode='subscription',
+        success_url=success_url,
+        cancel_url=cancel_url,
+    )
+
+    context = {
+        'form': form,
+        'STRIPE_PUBLIC_KEY': stripe.api_key,
+        'stripe_session_id': checkout_session['id']
+    }
+
+    return render(request, 'user_dashboard.html', context)
