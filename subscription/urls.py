@@ -1,9 +1,11 @@
 from django.urls import path
 from .views import register_view, user_dashboard
-
+from . import views
  
 
 urlpatterns = [
     path('register/', register_view, name='register'),
-    path('dashboard/', user_dashboard, name='dashboard'),  # Changed name to be unique
+    path('dashboard/', views.user_dashboard, name='dashboard'),  # Changed name to be unique
+    path('payment_success/', views.payment_success, name='payment_success'),
+
 ]

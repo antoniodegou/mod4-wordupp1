@@ -43,34 +43,82 @@
   <div class="tab-pane fade" id="subscription" role="tabpanel" aria-labelledby="subscription-tab">
 
     <h2>Create Subscription</h2>
-    <form method="post">
+    <form id="subscription-form" method="post" action="{% url 'dashboard' %}" >
+
       {% csrf_token %}
       {{ form }}
-      <button type="submit">Create</button>
+ 
+      <button id="stripe-button" type="submit" >Pay with Stripe</button>
+      <button id="subscribe-button" type="submit" style="display:none;">Subscribe</button>
+
     </form>
+ 
     
   </div>
 
-{% endblock %}
   <script src="https://js.stripe.com/v3/"></script>
   <script>
-    // Initialize Stripe
-    var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+// Initialize Stripe
+// Initialize Stripe
+var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+
+// document.addEventListener("DOMContentLoaded", function () {
+  var form = document.getElementById("subscription-form");
+  var stripeButton = document.getElementById("stripe-button");
+  var subscribeButton = document.getElementById("subscribe-button");
+
+  // Show or hide the Stripe button based on the plan selected
+  form.addEventListener("change", function() {
+    var planSelected = form.elements["stripe_plan_id"].value;
+    if (planSelected === "premium") {
+      stripeButton.style.display = "inline";
+      subscribeButton.style.display = "none";
+    } else {
+      stripeButton.style.display = "none";
+      subscribeButton.style.display = "inline";
+    }
+  });
+
+  // Stripe button click event
+// Stripe button click event
+stripeButton.addEventListener("click", function (event) {
+  // Comment out this line for debugging
+  event.preventDefault();  // Prevent default form submission
+
+  console.log("Stripe button clicked");
+
+  var selectedPlan = document.querySelector('input[name="stripe_plan_id"]:checked').value;
+
+  if (selectedPlan === 'premium') {
+    var sessionId = "{{ stripe_session_id }}";  // Assuming that `stripe_session_id` is being passed correctly to your template
+    console.log(sessionId);
     
-    document.addEventListener("DOMContentLoaded", function () {
-      var form = document.getElementById("subscription-form");
-      var stripeButton = document.getElementById("stripe-button");
-      
-      stripeButton.addEventListener("click", function () {
-        stripe.redirectToCheckout({
-          sessionId: "{{ stripe_session_id }}"
-        }).then(function (result) {
-          if (result.error) {
-            // Show error to the user
-            alert(result.error.message);
-          }
-        });
+    if (sessionId) {
+      console.log("Form submitting...");
+      stripe.redirectToCheckout({
+        sessionId: sessionId
+      }).then(function (result) {
+        if (result.error) {
+          // Show error to the user
+          alert(result.error.message);
+        }
       });
-    });
-  </script>
-  
+    } else {
+      alert("An error occurred. Please try again.");
+    }
+  } else {
+    form.submit();  // Submit the form for the free plan
+  }
+});
+
+// });
+
+
+    </script>
+    
+{% endblock %}
+
+
+{% block extra_js %}
+
+{% endblock %}
