@@ -72,5 +72,20 @@ class Subscription(models.Model):
         choices=STRIPE_PLAN_CHOICES,
         default='free_plan_id_here',
     )
+
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('past_due', 'Past Due'),
+        ('canceled', 'Canceled'),
+        ('incomplete', 'Incomplete'),
+        ('incomplete_expired', 'Incomplete Expired'),
+        ('trialing', 'Trialing'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='incomplete',
+    )
+
     def __str__(self):
         return f"{self.user.username}'s Subscription"

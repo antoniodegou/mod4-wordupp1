@@ -143,8 +143,7 @@ ALLOWED_HOSTS = ['wordupp-mod4-b-e569fbdc5d28.herokuapp.com', 'localhost', '127.
 # Read environment variables
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-print(STRIPE_SECRET_KEY)
-print(STRIPE_PUBLIC_KEY)
+
 LOGIN_URL = 'login'
 
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -156,3 +155,6 @@ if DEBUG:
 # Production
 else:
     BASE_URL = "https://wordupp-mod4-b-e569fbdc5d28.herokuapp.com/"
+
+
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')

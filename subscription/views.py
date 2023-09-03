@@ -11,6 +11,15 @@ from django.contrib.auth.forms import UserCreationForm
 import stripe
 import os
 
+import json
+import stripe
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+
+
+from django.http import JsonResponse
+
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 # Uncommenting the line to set the Stripe API key
  
@@ -142,3 +151,50 @@ def payment_success(request):
 
     messages.success(request, 'Your payment was successful!')
     return redirect('dashboard')
+
+
+# Dummy function to handle the checkout session. Replace this with your actual logic.
+def handle_checkout_session(session):
+    print("Checkout session completed:", session)
+    # Here, you could look up the user associated with this session and mark them as having paid,
+    # enroll them in a course, or whatever else your application needs to do.
+
+
+# Dummy function to handle the checkout session. Replace this with your actual logic.
+def handle_checkout_session(session):
+    print("Checkout session completed:", session)
+    # Here, you could look up the user associated with this session and mark them as having paid,
+    # enroll them in a course, or whatever else your application needs to do.
+
+# Webhook handler for Stripe
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    stripe.api_key = os.getenv('STRIPE_SECRET_KEY')  # Read Stripe secret key from environment variable
+
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, stripe.api_key
+        )
+    except ValueError as e:
+        # Invalid payload
+        print("Invalid payload:", e)
+        return JsonResponse({'status': 'Invalid payload'}, status=400)
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        print("Invalid signature:", e)
+        return JsonResponse({'status': 'Invalid signature'}, status=400)
+
+    # Handle the event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        handle_checkout_session(session)
+    # ... add more event types to handle as needed
+
+    return JsonResponse({'status': 'success'})
