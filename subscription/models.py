@@ -1,76 +1,79 @@
-from django.contrib.auth.models import AbstractUser
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-# from django.contrib import messages
 from django.db import models
-from django.conf import settings  # Import settings to get the custom user model
-from django.contrib.auth.models import User
+from django.conf import settings
 from datetime import datetime, timedelta
-# from django.shortcuts import render, redirect
-# from .forms import SubscriptionForm  # Importing SubscriptionForm from forms.py
-# from .models import Subscription 
-# from .forms import SubscriptionForm
+from django.contrib.auth.models import AbstractUser, UserManager as DefaultUserManager
+from django.utils import timezone
+from django.contrib.auth.models import User
+from django.db import models
 
-class CustomUser(AbstractUser):
-    # You can add additional fields here if needed
-
-    # Add these lines to solve the reverse accessor issue
-    groups = models.ManyToManyField(
-        'auth.Group',
-        verbose_name='groups',
-        blank=True,
-        help_text='The groups this user belongs to.',
-        related_name="customuser_set",
-        related_query_name="user",
-    )
-
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        verbose_name='user permissions',
-        blank=True,
-        help_text='Specific permissions for this user.',
-        related_name="customuser_set",
-        related_query_name="user",
-    )
+ 
 
 
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+
+# Canvas Model
 class Canvas(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='canvases')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='canvases')
+
     name = models.CharField(max_length=255)
-    canvas_data = models.TextField()  # You can use JSONField if you're on Django 3.1+
+    canvas_data = models.TextField()
+    thumbnail = models.ImageField(upload_to='canvas_thumbnails/', blank=True, null=True)
+    tags = models.ManyToManyField('Tag', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
 
- 
+# Tag Model
+class Tag(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
 # Saved Work Model
 class SavedWork(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='saved_works')
-    canvas_data = models.JSONField()  # You can choose the appropriate field type based on your data
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_works')
+    canvas_data = models.JSONField()
+    version = models.IntegerField(default=1)
     creation_date = models.DateTimeField(auto_now_add=True)
     last_modified_date = models.DateTimeField(auto_now=True)
 
+
     def __str__(self):
         return f"{self.user.username}'s saved work"
-    
- 
-class Subscription(models.Model):
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    start_date = models.DateTimeField(default=datetime.now)
-    end_date = models.DateTimeField(default=datetime.now)
+def get_current_datetime():
+    return timezone.now()
+
+# Subscription Model
+class Subscription(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(default=timezone.now)  # Consider using a custom function to set a future date
     is_premium = models.BooleanField(default=False)
     stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+
+ 
     STRIPE_PLAN_CHOICES = [
-        ('free_plan_id_here', 'Free'),
-        ('premium_plan_id_here', 'Premium'),
+        ('price_1NmG4RCOAyay7VTLqfqUxOud', 'Free'),
+        ('price_1NmG4RCOAyay7VTLPcRACV7i', 'Premium'),
     ]
     stripe_plan_id = models.CharField(
         max_length=50,
         choices=STRIPE_PLAN_CHOICES,
-        default='free_plan_id_here',
+        default='price_1NmG4RCOAyay7VTLqfqUxOud',
     )
 
     STATUS_CHOICES = [
@@ -87,5 +90,16 @@ class Subscription(models.Model):
         default='incomplete',
     )
 
+
+    
+    def is_active(self):
+       return self.status == 'active' and self.end_date > datetime.now()
+
     def __str__(self):
         return f"{self.user.username}'s Subscription"
+
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+ 

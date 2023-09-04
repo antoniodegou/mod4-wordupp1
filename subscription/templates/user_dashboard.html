@@ -50,71 +50,74 @@
  
       <button id="stripe-button" type="submit" >Pay with Stripe</button>
       <button id="subscribe-button" type="submit" style="display:none;">Subscribe</button>
+      <h1>"{{ stripe_session_id }}"</h1>
+      <h1>"{{ sessionId}}"</h1>
+      <div>Debug: Stripe Session ID is {{ stripe_session_id }}</div>
 
     </form>
  
-    
   </div>
 
-  <script src="https://js.stripe.com/v3/"></script>
+ 
   <script>
-// Initialize Stripe
-// Initialize Stripe
-var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
-
-// document.addEventListener("DOMContentLoaded", function () {
-  var form = document.getElementById("subscription-form");
-  var stripeButton = document.getElementById("stripe-button");
-  var subscribeButton = document.getElementById("subscribe-button");
-
-  // Show or hide the Stripe button based on the plan selected
-  form.addEventListener("change", function() {
-    var planSelected = form.elements["stripe_plan_id"].value;
-    if (planSelected === "premium") {
-      stripeButton.style.display = "inline";
-      subscribeButton.style.display = "none";
-    } else {
-      stripeButton.style.display = "none";
-      subscribeButton.style.display = "inline";
-    }
-  });
-
-  // Stripe button click event
-// Stripe button click event
-stripeButton.addEventListener("click", function (event) {
-  // Comment out this line for debugging
-  event.preventDefault();  // Prevent default form submission
-
-  console.log("Stripe button clicked");
-
-  var selectedPlan = document.querySelector('input[name="stripe_plan_id"]:checked').value;
-
-  if (selectedPlan === 'premium') {
-    var sessionId = "{{ stripe_session_id }}";  // Assuming that `stripe_session_id` is being passed correctly to your template
-    console.log(sessionId);
+    // Wait for the entire page to load before executing the code
+    window.addEventListener('load', function() {
+      // Dynamically load Stripe.js
+      var script = document.createElement('script');
+      script.src = "https://js.stripe.com/v3/";
+      document.head.appendChild(script);
     
-    if (sessionId) {
-      console.log("Form submitting...");
-      stripe.redirectToCheckout({
-        sessionId: sessionId
-      }).then(function (result) {
-        if (result.error) {
-          // Show error to the user
-          alert(result.error.message);
-        }
-      });
-    } else {
-      alert("An error occurred. Please try again.");
-    }
-  } else {
-    form.submit();  // Submit the form for the free plan
-  }
-});
-
-// });
-
-
+      // Initialize Stripe only after Stripe.js is loaded
+      script.onload = function() {
+        // Initialize Stripe
+        var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+        // Log the session ID for debugging
+        var sessionId = "{{ stripe_session_id }}"; 
+        console.log("Session ID:", sessionId);
+    
+        var form = document.getElementById("subscription-form");
+        var stripeButton = document.getElementById("stripe-button");
+        var subscribeButton = document.getElementById("subscribe-button");
+    
+        // Show or hide the Stripe button based on the plan selected
+        form.addEventListener("change", function() {
+          var planSelected = form.elements["stripe_plan_id"].value;
+          if (planSelected === "price_1NmG4RCOAyay7VTLPcRACV7i") {
+            stripeButton.style.display = "inline";
+            subscribeButton.style.display = "none";
+          } else {
+            stripeButton.style.display = "none";
+            subscribeButton.style.display = "inline";
+          }
+        });
+    
+        // Stripe button click event
+        stripeButton.addEventListener("click", function (event) {
+          console.log("Stripe button clicked");
+          var selectedPlan = document.querySelector('input[name="stripe_plan_id"]:checked').value;
+          if (selectedPlan === 'price_1NmG4RCOAyay7VTLPcRACV7i') {
+            console.log("ABC" + sessionId);
+            if (sessionId) {
+              console.log("Form submitting...");
+              stripe.redirectToCheckout({
+                sessionId: sessionId
+              }).then(function (result) {
+                if (result.error) {
+                  alert(result.error.message);
+                }
+              });
+            } else {
+              alert("An error occurred. Please try again.");
+            }
+          } else {
+            form.submit();  // Submit the form for the free plan
+          }
+        });
+      }; // End of script.onload
+    }); // End of window.addEventListener
     </script>
+    
+
     
 {% endblock %}
 

@@ -2,26 +2,45 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import StripeSubscriptionForm
-import stripe
 from django.conf import settings
 import os
 from datetime import datetime, timedelta
 from .models import Subscription
 from django.contrib.auth.forms import UserCreationForm
 import stripe
-import os
 
-import json
-import stripe
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-
-
+ 
+from django.apps import AppConfig
+from django.db.models.signals import post_save
 from django.http import JsonResponse
 
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+# from subscription.models import User
+from .models import UserProfile , Profile # import the UserProfile model
+
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+# User.objects.get()
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
 # Uncommenting the line to set the Stripe API key
+ 
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+    instance.profile.save()
+
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        # User is already created, no need to create again
+        instance.profile.save()
+
  
  # Create your views here.
 def homepage(request):
@@ -37,12 +56,14 @@ def contact(request):
  
 
  
-
+# Combined register_view function
 def register_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            UserProfile.objects.create(user=user)  # Create the UserProfile
+            create_or_update_stripe_customer(user)  # Create Stripe customer
             return redirect('login')
     else:
         form = UserCreationForm()
@@ -54,46 +75,44 @@ def dashboard_view(request):
     return render(request, 'user_dashboard.html')
 
 
-
-# @login_required
-# def user_dashboard(request):
-#     if request.method == "POST":
-#         form = SubscriptionForm(request.POST)
-#         if form.is_valid():
-#             subscription, created = Subscription.objects.get_or_create(
-#                 user=request.user,
-#                 defaults={
-#                     'start_date': datetime.now(),
-#                     'end_date': datetime.now() + timedelta(days=30),
-#                     'is_premium': form.cleaned_data['is_premium'],
-#                 }
-#             )
-#             if not created:
-#                 subscription.is_premium = form.cleaned_data['is_premium']
-#                 subscription.start_date = datetime.now()
-#                 subscription.end_date = datetime.now() + timedelta(days=30)
-#                 subscription.save()
-
-#             messages.success(request, 'Subscription updated successfully!')
-#             return redirect('dashboard')
-#     else:
-#         form = SubscriptionForm()
-
-#     return render(request, 'user_dashboard.html', {'form': form})
-# print("Stripe Public Key: ", os.getenv('STRIPE_PUBLIC_KEY'))
-
+from .models import UserProfile 
  
 @login_required
 def user_dashboard(request):
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    stripe_customer_id = user_profile.stripe_customer_id
+
+    # Attempt to generate a Stripe session ID for all request types (GET, POST, etc.)
+    try:
+        success_url = f"{settings.BASE_URL}/webhooks/stripe/payment_success/"
+        cancel_url = f"{settings.BASE_URL}/webhooks/stripe/payment_cancel/"
+
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price': 'price_1NmG4RCOAyay7VTLPcRACV7i',  # Replace with your actual Stripe Price ID
+                'quantity': 1,
+            }],
+            mode='subscription',
+            customer=stripe_customer_id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+        stripe_session_id = checkout_session['id']
+    except Exception as e:
+        stripe_session_id = None
+        print(f"An error occurred while creating the Stripe session: {e}")
+
     if request.method == "POST":
         form = StripeSubscriptionForm(request.POST)
         if form.is_valid():
             stripe_plan_id = form.cleaned_data['stripe_plan_id']
 
             # Handling the Free Plan
-            if stripe_plan_id == 'free':
+            if stripe_plan_id == 'price_1NmG4RCOAyay7VTLqfqUxOud':
                 Subscription.objects.get_or_create(
-                    user=request.user,
+                    user_profile=user_profile,
                     defaults={
                         'start_date': datetime.now(),
                         'end_date': datetime.now() + timedelta(days=30),
@@ -102,44 +121,23 @@ def user_dashboard(request):
                 )
                 messages.success(request, 'You are now subscribed to the Free plan!')
                 return redirect('dashboard')
-
+                
             # Handling the Premium Plan
-            elif stripe_plan_id == 'premium':
-                try:
-                    success_url = f"{settings.BASE_URL}/payment_success/"
-                    cancel_url = f"{settings.BASE_URL}/payment_cancel/"
-
-                    checkout_session = stripe.checkout.Session.create(
-                        payment_method_types=['card'],
-                        line_items=[{
-                            'price': 'premium',  # Your actual Stripe Price ID here
-                            'quantity': 1,
-                        }],
-                        mode='subscription',
-                        success_url=success_url,
-                        cancel_url=cancel_url,
-                    )
-
-                    context = {
-                        'form': form,
-                        'STRIPE_PUBLIC_KEY': os.getenv('STRIPE_PUBLIC_KEY'),
-                        'stripe_session_id': checkout_session['id']
-                    }
-
-                    messages.success(request, 'Please proceed to payment.')
-                    return render(request, 'user_dashboard.html', context)
-
-                except Exception as e:
-                    messages.error(request, f"An error occurred: {e}")
+            elif stripe_plan_id == 'price_1NmG4RCOAyay7VTLPcRACV7i':
+                messages.success(request, 'Please proceed to payment.')
+                
     else:
         form = StripeSubscriptionForm()
 
+    # Common context for both GET and POST
     context = {
         'form': form,
         'STRIPE_PUBLIC_KEY': os.getenv('STRIPE_PUBLIC_KEY'),
+        'stripe_session_id': stripe_session_id  # Now available for all types of requests
     }
 
     return render(request, 'user_dashboard.html', context)
+
 
 
 def payment_success(request):
@@ -160,41 +158,110 @@ def handle_checkout_session(session):
     # enroll them in a course, or whatever else your application needs to do.
 
 
-# Dummy function to handle the checkout session. Replace this with your actual logic.
-def handle_checkout_session(session):
-    print("Checkout session completed:", session)
-    # Here, you could look up the user associated with this session and mark them as having paid,
-    # enroll them in a course, or whatever else your application needs to do.
+
+
 
 # Webhook handler for Stripe
 
 
+
+import traceback
+
 @csrf_exempt
 def stripe_webhook(request):
-    stripe.api_key = os.getenv('STRIPE_SECRET_KEY')  # Read Stripe secret key from environment variable
-
-    payload = request.body
-    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
-
-    event = None
-
+    """
+    function to update the subscription status and other fields 
+    when a subscription is successfully created or modified on Stripe.
+    """
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, stripe.api_key
-        )
-    except ValueError as e:
-        # Invalid payload
-        print("Invalid payload:", e)
-        return JsonResponse({'status': 'Invalid payload'}, status=400)
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        print("Invalid signature:", e)
-        return JsonResponse({'status': 'Invalid signature'}, status=400)
+        payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+        event = None
 
-    # Handle the event
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
-        handle_checkout_session(session)
-    # ... add more event types to handle as needed
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+            )
+        except ValueError as e:
+            print(f"Invalid payload: {e}")
+            return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
+        except stripe.error.SignatureVerificationError as e:
+            print(f"Invalid signature: {e}")
+            return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
+
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            print(f"Session Object: {session}")  # Debug print
+
+            customer_id = session.get('customer')
+            if not customer_id:
+                print("No customer ID found in session")
+                return JsonResponse({'status': 'failure'}, status=400)
+
+            customer = stripe.Customer.retrieve(customer_id)
+            print(f"Customer Object: {customer}")  # Debug print
+
+            try:
+                user = User.objects.get(email=customer.email)
+            except User.DoesNotExist:
+                print(f"User with email {customer.email} does not exist.")
+                return JsonResponse({'status': 'failure'}, status=400)
+
+            # subscription = Subscription.objects.get(user=user)
+            user_profile = UserProfile.objects.get(user=user)  # get the UserProfile
+            subscription = Subscription.objects.get(user_profile=user_profile)  # use user_profile here
+
+            subscription.status = 'active'
+            subscription.stripe_subscription_id = session['subscription']
+            subscription.save()
+
+        elif event['type'] == 'customer.subscription.deleted':
+            session = event['data']['object']
+            print(f"Subscription Object: {session}")  # Debug print
+
+            customer_id = session.get('customer')
+            if not customer_id:
+                print("No customer ID found in session")
+                return JsonResponse({'status': 'failure'}, status=400)
+
+            customer = stripe.Customer.retrieve(customer_id)
+            print(f"Customer Object: {customer}")  # Debug print
+
+            try:
+                user = User.objects.get(email=customer.email)
+            except User.DoesNotExist:
+                print(f"User with email {customer.email} does not exist.")
+                if customer.email is None:
+                    print("Email is missing in the customer object.")
+                return JsonResponse({'status': 'failure'}, status=400)
+                # return JsonResponse({'status': 'failure'}, status=400)
+
+            subscription = Subscription.objects.get(user=user)
+            subscription.status = 'canceled'
+            subscription.save()
+
+    except Exception as e:
+        
+        traceback.print_exc()
+        print(f"Error Occurred: {e}")
+        return JsonResponse({'status': 'failure', 'error': str(e)}, status=500)
 
     return JsonResponse({'status': 'success'})
+
+
+# This could be part of your register_view or another view
+def create_or_update_stripe_customer(user):
+    try:
+        print(f"Creating Stripe customer for email: {user.email}")
+        customer = stripe.Customer.create(email=user.email)
+        print(f"Stripe Customer Created: {customer.id}, {customer.email}")
+        
+        # Save Stripe customer ID to UserProfile
+        user_profile = UserProfile.objects.get(user=user)
+        user_profile.stripe_customer_id = customer.id
+        user_profile.save()
+        print(f"Saved stripe_customer_id {customer.id} for user {user.email}")
+    except Exception as e:
+        print(f"Failed to create Stripe customer: {e}")
+
+
