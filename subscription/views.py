@@ -59,14 +59,14 @@ def contact(request):
 # Combined register_view function
 def register_view(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)  # Use the custom form here
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            UserProfile.objects.create(user=user)  # Create the UserProfile
-            create_or_update_stripe_customer(user)  # Create Stripe customer
-            return redirect('login')
+            user_profile = UserProfile.objects.create(user=user)
+            create_or_update_stripe_customer(user)
+            return redirect('dashboard')
     else:
-        form = CustomUserCreationForm()  # Use the custom form here
+        form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
 
@@ -254,12 +254,30 @@ def create_or_update_stripe_customer(user):
         print(f"Creating Stripe customer for email: {user.email}")
         customer = stripe.Customer.create(email=user.email)
         print(f"Stripe Customer Created: {customer.id}, {customer.email}")
-        
+
         # Save Stripe customer ID to UserProfile
-        user_profile = UserProfile.objects.get(user=user)
+        user_profile, created = UserProfile.objects.get_or_create(user=user)
         user_profile.stripe_customer_id = customer.id
         user_profile.save()
         print(f"Saved stripe_customer_id {customer.id} for user {user.email}")
+
+        # Create or update Subscription
+        subscription, created = Subscription.objects.get_or_create(
+            user_profile=user_profile,
+            defaults={
+                'start_date': datetime.now(),
+                'end_date': datetime.now() + timedelta(days=30),
+                'stripe_plan_id': 'price_1NmG4RCOAyay7VTLqfqUxOud',  # Your Stripe Free Plan ID
+                'status': 'active'
+            }
+        )
+        if not created:
+            # Update other fields if subscription already exists
+            subscription.start_date = datetime.now()
+            subscription.end_date = datetime.now() + timedelta(days=30)
+            subscription.stripe_plan_id = 'price_1NmG4RCOAyay7VTLqfqUxOud'
+            subscription.status = 'active'
+            subscription.save()
     except Exception as e:
         print(f"Failed to create Stripe customer: {e}")
 
