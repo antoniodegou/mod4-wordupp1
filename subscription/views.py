@@ -59,14 +59,14 @@ def contact(request):
 # Combined register_view function
 def register_view(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)  # Use the custom form here
         if form.is_valid():
             user = form.save()
             UserProfile.objects.create(user=user)  # Create the UserProfile
             create_or_update_stripe_customer(user)  # Create Stripe customer
             return redirect('login')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()  # Use the custom form here
     return render(request, 'registration/register.html', {'form': form})
 
 

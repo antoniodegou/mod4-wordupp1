@@ -1,13 +1,82 @@
 {% extends "core/base.html" %}
+{% load static %}
+
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'subscription/css/register.css' %}">
+{% endblock %}
 
 {% block title %}Register{% endblock %}
 
 {% block content %}
-    <h1>Register</h1>
-    <form method="post">
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+    <h1 class="mb-4">Register</h1>
+    <form method="post" class="w-100 col-md-6">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
+ 
+        <!-- Username -->
+        <div class="form-floating mb-3">
+            <input type="text" name="username" class="form-control rounded-0" id="{{ form.username.id_for_label }}" placeholder="Username">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+        </div>
+
+        <!-- Email -->
+        <div class="form-floating mb-3">
+            <input type="email" name="email" class="form-control rounded-0" id="{{ form.email.id_for_label }}" placeholder="Email">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+        </div>
+
+        <!-- Password -->
+        <div class="form-floating mb-3">
+            <input type="password" name="password1" class="form-control rounded-0" id="{{ form.password1.id_for_label }}" placeholder="Password">
+            <label for="{{ form.password1.id_for_label }}">Password</label>
+            <span class="position-absolute top-0 end-0 mt-2 me-2" data-bs-toggle="tooltip" data-bs-html="true" title="<ul class='text-start'><li>Your password can’t be too similar to your other personal information.</li><li>Your password must contain at least 8 characters.</li><li>Your password can’t be a commonly used password.</li><li>Your password can’t be entirely numeric.</li></ul>" data-bs-custom-class="tooltip-custom">
+                <span class="icon-question-circle"></span>
+            </span>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-floating mb-3">
+            <input type="password" name="password2" class="form-control rounded-0" id="{{ form.password2.id_for_label }}" placeholder="Confirm Password">
+            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+        </div>
+
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary rounded-0 bg-yellow btn-lg">Register</button>
+
     </form>
-    <p>Already have an account? <a href="{% url 'login' %}">Log In</a></p>
+    <p class="mt-5">Already have an account? <a href="{% url 'login' %}">Log In</a></p>
+</div>
+</div>
+    <!-- Tooltip Content -->
+    <div id="passwordTooltip" class="d-none">
+        <p class="text-start"><strong>Password Requirements:</strong></p>
+        <ul class="text-start">
+            <li>At least 8 characters</li>
+            <li>Cannot be a commonly used password</li>
+            <li>Cannot be entirely numeric</li>
+        </ul>
+    </div>
+    
+    {% block extra_js %}
+    <script>
+      document.addEventListener('DOMContentLoaded', (event) => {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl, {
+            customClass: 'tooltip-custom'
+          })
+        })
+      });
+    </script>
+    {% endblock %}
+     <!-- <form method="post">
+        // {% csrf_token %}
+        // {{ form.as_p }}
+ 
+        // <button type="submit">Register</button>
+    // </form> -->
+    
 {% endblock %}

@@ -1,0 +1,47 @@
+.tooltip-custom .tooltip-inner {
+    text-align: left;
+    max-width: 300px; /* Set the max-width you want */
+ 
+}
+
+ 
+.icon-question-circle {
+  font-size: 2rem!important;  /* Adjust size here */
+  color: var(--pink)!important;    /* Set color here */
+  line-height: 40px;
+}
+
+input {
+    background-color: var(--black)!important;
+    color:var(--white)!important;
+    text-align: center;
+    font-family: 'Noto Sans', sans-serif!important;
+    font-weight: 900!important;
+}
+
+label{
+    color:var(--white);
+}
+
+.form-floating>.form-control-plaintext~label, 
+.form-floating>.form-control:focus~label,
+ .form-floating>.form-control:not(:placeholder-shown)~label,
+  .form-floating>.form-select~label{
+    background-color: unset;
+    color:var(--white);
+    text-transform: uppercase;
+}
+
+
+.form-floating>.form-control-plaintext~label::after, 
+.form-floating>.form-control:focus~label::after, 
+.form-floating>.form-control:not(:placeholder-shown)~label::after,
+ .form-floating>.form-select~label::after{
+    background-color: unset;
+    border-radius:0;
+ }
+
+
+ .form-control:focus {
+    box-shadow: unset;
+ }
