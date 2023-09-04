@@ -19,6 +19,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 # from subscription.models import User
 from .models import UserProfile , Profile # import the UserProfile model
+from django.contrib.auth import login
 
 from django.contrib.auth import get_user_model
 from .forms import CustomUserCreationForm
@@ -62,13 +63,16 @@ def register_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            user_profile = UserProfile.objects.create(user=user)
+            UserProfile.objects.create(user=user)
             create_or_update_stripe_customer(user)
-            return redirect('dashboard')
+
+            # Log the user in
+            login(request, user)
+
+            return redirect('dashboard')  # or wherever you want to redirect
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
-
 
 @login_required
 def dashboard_view(request):
