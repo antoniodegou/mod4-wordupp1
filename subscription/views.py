@@ -21,7 +21,7 @@ from django.dispatch import receiver
 from .models import UserProfile , Profile # import the UserProfile model
 
 from django.contrib.auth import get_user_model
-
+from .forms import CustomUserCreationForm
 User = get_user_model()
 
 # User.objects.get()
@@ -59,7 +59,7 @@ def contact(request):
 # Combined register_view function
 def register_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             UserProfile.objects.create(user=user)  # Create the UserProfile
@@ -166,13 +166,12 @@ def handle_checkout_session(session):
 
 
 import traceback
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
 
 @csrf_exempt
 def stripe_webhook(request):
-    """
-    function to update the subscription status and other fields 
-    when a subscription is successfully created or modified on Stripe.
-    """
     try:
         payload = request.body
         sig_header = request.META['HTTP_STRIPE_SIGNATURE']
@@ -183,67 +182,67 @@ def stripe_webhook(request):
                 payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
             )
         except ValueError as e:
-            print(f"Invalid payload: {e}")
             return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
         except stripe.error.SignatureVerificationError as e:
-            print(f"Invalid signature: {e}")
             return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
 
         if event['type'] == 'checkout.session.completed':
             session = event['data']['object']
-            print(f"Session Object: {session}")  # Debug print
-
             customer_id = session.get('customer')
-            if not customer_id:
-                print("No customer ID found in session")
+            subscription_id = session.get('subscription')
+
+            if not customer_id or not subscription_id:
                 return JsonResponse({'status': 'failure'}, status=400)
+
+            stripe_subscription = stripe.Subscription.retrieve(subscription_id)
+            stripe_plan_id = stripe_subscription['plan']['id']
 
             customer = stripe.Customer.retrieve(customer_id)
-            print(f"Customer Object: {customer}")  # Debug print
-
             try:
                 user = User.objects.get(email=customer.email)
-            except User.DoesNotExist:
-                print(f"User with email {customer.email} does not exist.")
+                user_profile = UserProfile.objects.get(user=user)
+            except (User.DoesNotExist, UserProfile.DoesNotExist):
                 return JsonResponse({'status': 'failure'}, status=400)
 
-            # subscription = Subscription.objects.get(user=user)
-            user_profile = UserProfile.objects.get(user=user)  # get the UserProfile
-            subscription = Subscription.objects.get(user_profile=user_profile)  # use user_profile here
+            try:
+                subscription = Subscription.objects.get(user_profile=user_profile)
+            except Subscription.DoesNotExist:
+                subscription = Subscription.objects.create(
+                    user_profile=user_profile,
+                    start_date=timezone.now(),
+                    end_date=timezone.now() + timedelta(days=30),
+                    status='active',
+                )
 
+            subscription.stripe_subscription_id = subscription_id
+            subscription.stripe_plan_id = stripe_plan_id
             subscription.status = 'active'
-            subscription.stripe_subscription_id = session['subscription']
             subscription.save()
 
         elif event['type'] == 'customer.subscription.deleted':
             session = event['data']['object']
-            print(f"Subscription Object: {session}")  # Debug print
-
             customer_id = session.get('customer')
+
             if not customer_id:
-                print("No customer ID found in session")
                 return JsonResponse({'status': 'failure'}, status=400)
 
             customer = stripe.Customer.retrieve(customer_id)
-            print(f"Customer Object: {customer}")  # Debug print
 
             try:
                 user = User.objects.get(email=customer.email)
             except User.DoesNotExist:
-                print(f"User with email {customer.email} does not exist.")
-                if customer.email is None:
-                    print("Email is missing in the customer object.")
-                return JsonResponse({'status': 'failure'}, status=400)
-                # return JsonResponse({'status': 'failure'}, status=400)
+                return JsonResponse({'status': 'failure', 'error': f'User with email {customer.email} does not exist.'}, status=400)
 
-            subscription = Subscription.objects.get(user=user)
+            try:
+                subscription = Subscription.objects.get(user=user)
+            except ObjectDoesNotExist:
+                return HttpResponse(status=400)
+
             subscription.status = 'canceled'
             subscription.save()
 
     except Exception as e:
-        
         traceback.print_exc()
-        print(f"Error Occurred: {e}")
         return JsonResponse({'status': 'failure', 'error': str(e)}, status=500)
 
     return JsonResponse({'status': 'success'})

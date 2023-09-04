@@ -96,7 +96,9 @@ class Subscription(models.Model):
        return self.status == 'active' and self.end_date > datetime.now()
 
     def __str__(self):
-        return f"{self.user.username}'s Subscription"
+        # return f"{self.user.username}'s Subscription"
+        return f"{self.user_profile.user.username}'s Subscription"
+
 
 
 

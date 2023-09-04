@@ -85,4 +85,5 @@ ehthumbs.db
 Thumbs.db
 
 # Custom additions
-.env  # Environment variables should be kept secret
+# Environment variables should be kept secret
+.env  
