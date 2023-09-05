@@ -159,4 +159,4 @@ else:
 
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
- 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'

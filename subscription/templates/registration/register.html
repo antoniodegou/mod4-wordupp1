@@ -3,16 +3,32 @@
 
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'subscription/css/register.css' %}">
+    <link rel="stylesheet" href="{% static 'subscription/css/logregister.css' %}">
 {% endblock %}
 
 {% block title %}Register{% endblock %}
 
 {% block content %}
+
+
+
+
 <div class="row justify-content-center">
+
     <div class="col-lg-6">
+            {% if form.errors %}
+    <div class=" bg-red p-2 mb-4 black-border">
+       
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <p class="text-center m-0">{{ field }}: {{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+  
+    </div>
+{% endif %}
     <h1 class="mb-4">Register</h1>
-    <form method="post" class="w-100 col-md-6">
+    <form method="post" class="w-100 col-md-6 bg-red p-4">
         {% csrf_token %}
  
         <!-- Username -->

@@ -23,6 +23,7 @@ from django.contrib.auth import login
 
 from django.contrib.auth import get_user_model
 from .forms import CustomUserCreationForm
+from django.contrib import messages
 User = get_user_model()
 
 # User.objects.get()
@@ -36,11 +37,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
     instance.profile.save()
 
-@receiver(post_save, sender=User)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        # User is already created, no need to create again
-        instance.profile.save()
+
 
  
  # Create your views here.
@@ -56,23 +53,29 @@ def contact(request):
     return render(request, 'core/contact.html')
  
 
- 
+from django.contrib.messages import get_messages
 # Combined register_view function
 def register_view(request):
+    print("Register view was called.")  # Debugging line
     if request.method == 'POST':
+        print("POST request received.")  # Debugging line
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            UserProfile.objects.create(user=user)
-            create_or_update_stripe_customer(user)
-
-            # Log the user in
-            login(request, user)
-
-            return redirect('dashboard')  # or wherever you want to redirect
+            print("Form is valid.")  # Debugging line
+            if User.objects.filter(username=form.cleaned_data['username']).exists():
+                print("Username exists, adding error message.")  # Debugging line
+                messages.error(request, 'Username already exists.')
+                return render(request, 'registration/register.html', {'form': form})
+            else:
+                print("Username does not exist, creating new user.")  # Debugging line
+                # ... (rest of your code)
+        else:
+            print("Form is not valid.")  # Debugging line
+            print(form.errors)  # Display form errors
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
+
 
 @login_required
 def dashboard_view(request):
