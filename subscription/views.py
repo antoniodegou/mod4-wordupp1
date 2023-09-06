@@ -46,6 +46,10 @@ def register_view(request):
         if form.is_valid():
             user = form.save()  # Save the user and get a user object
             login(request, user)  # Log the user in
+
+            # Create or Update Stripe Customer and Assign Free Subscription
+            create_or_update_stripe_customer(user)
+
             messages.success(request, 'Registration successful.')
             return redirect('dashboard')  # Redirect to a new page
         else:
@@ -148,18 +152,35 @@ def user_dashboard(request):
     """
     user_profile, _ = get_or_create_user_profile(request.user)
     stripe_session_id = create_stripe_checkout_session(user_profile.stripe_customer_id)
+    # Fetching the Subscription
+    try:
+        user_subscription = Subscription.objects.get(user_profile=user_profile)
+        subscription_plan = user_subscription.stripe_plan_id  # This should be either 'free' or 'premium' or your Stripe Plan ID
+    except Subscription.DoesNotExist:
+        subscription_plan = None
+
+    STRIPE_PLAN_NAMES = {
+        'price_1NmG4RCOAyay7VTLqfqUxOud': 'Free',
+        'price_1NmG4RCOAyay7VTLPcRACV7i': 'Premium'
+    }
+
+    subscription_plan_name = STRIPE_PLAN_NAMES.get(subscription_plan, 'Unknown Plan!')
     
     if request.method == "POST":
         form = StripeSubscriptionForm(request.POST)
         if form.is_valid():
-            handle_form_submission(form, user_profile)
+            handle_form_submission(form, user_profile, request)
     else:
         form = StripeSubscriptionForm()
+    # Mapping Stripe Plan IDs to human-readable names
+
 
     context = {
         'form': form,
         'STRIPE_PUBLIC_KEY': os.getenv('STRIPE_PUBLIC_KEY'),
-        'stripe_session_id': stripe_session_id
+        'stripe_session_id': stripe_session_id,
+        'subscription_plan': subscription_plan_name  # Adding the subscription plan to the context
+
     }
 
     return render(request, 'user_dashboard.html', context)

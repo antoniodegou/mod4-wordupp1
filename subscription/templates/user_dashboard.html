@@ -29,6 +29,15 @@
   <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
     <h2>Dashboard</h2>
     <p>Here you can manage your subscriptions and view your data.</p>
+    <div>
+
+    
+    {% if subscription_plan %}
+    <p>Your current subscription plan is: {{ subscription_plan }}</p>
+      {% else %}
+          <p>You do not have an active subscription.</p>
+      {% endif %}
+    </div>
   </div>
   
   <!-- Profile Tab -->
