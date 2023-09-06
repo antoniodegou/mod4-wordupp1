@@ -160,3 +160,7 @@ else:
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
+# settings.py
+
+# Use database-backed sessions (this is the default setting)
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
