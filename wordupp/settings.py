@@ -82,6 +82,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'wordupp.wsgi.application'
 
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

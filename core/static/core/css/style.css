@@ -4,6 +4,7 @@
     --yellow:#EEA932;
     --white: #f4f4f4;
     --white:#d3e1f7;
+
     --black: #090909;
     --lineWidth: 3px;
     --shadow:  0 10px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19) !important;
@@ -81,3 +82,80 @@ nav a, .btn, footer a, footer p{
 }
 
 
+
+@font-face {
+    font-family: 'icomoon';
+    src: url('../fonts/icomoon.eot?helv6');
+    src: url('../fonts/icomoon.eot?s1ttcs#iefix') format('embedded-opentype'), 
+         url('../fonts/icomoon.ttf?helv6') format('truetype'), 
+         url('../fonts/icomoon.woff?helv6') format('woff'), 
+         url('../fonts/icomoon.svg?helv6#icomoon') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+     font-family: 'icomoon' !important;
+     font-style: normal;
+     font-weight: normal;
+     font-variant: normal;
+     text-transform: none;
+     line-height: 1;
+    /* Better Font Rendering =========== */
+     -webkit-font-smoothing: antialiased;
+     -moz-osx-font-smoothing: grayscale;
+font-size: 2rem;
+}
+     .icon-brush:before {
+  content: "\e900";
+}
+.icon-star:before {
+  content: "\e909";
+}
+.icon-wrench:before {
+  content: "\e902";
+}
+.icon-camera:before {
+  content: "\e903";
+}
+.icon-list:before {
+  content: "\e901";
+}
+.icon-paint:before {
+  content: "\e904";
+}
+.icon-heart:before {
+  content: "\e906";
+}
+.icon-textsms:before {
+  content: "\e907";
+}
+.icon-question-circle:before {
+  content: "\f059";
+}
+.icon-gift:before {
+  content: "\f06b";
+}
+.icon-file-image-o:before {
+  content: "\f1c5";
+}
+.icon-file-photo-o:before {
+  content: "\f1c5";
+}
+.icon-file-picture-o:before {
+  content: "\f1c5";
+}
+.icon-mouse-pointer:before {
+  content: "\f245";
+}
+.icon-i-cursor:before {
+  content: "\f246";
+}
+.icon-image-inverted:before {
+  content: "\e908";
+}
+.icon-text-document-inverted:before {
+  content: "\e905";
+}

@@ -1,0 +1,22 @@
+root{
+    --bs-nav-tabs-link-active-bg: var(--white)!important;
+    --bs-body-bg: var(--pink)!important;
+}
+
+#dashboard-tab,#profile-tab, #subscription-tab, .tab-pane{
+    border: var(--border);
+}
+
+#dashboard-tab,#profile-tab, #subscription-tab{
+    border-bottom: none;
+}
+.tab-pane{
+    background-color: var(--yellow);
+   padding:1rem;
+}
+
+.my-plan{
+    border: var(--border);
+    background-color: var(--white);
+    padding: 0 1rem ;
+}

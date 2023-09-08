@@ -1,6 +1,13 @@
 {% extends "core/base.html" %}
+{% load static %}
 
 {% block title %}User Dashboard{% endblock %}
+
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'subscription/css/dashboard.css' %}">
+{% endblock %}
+
 
 {% block content %}
 {% if messages %}
@@ -10,14 +17,14 @@
     {% endfor %}
   </ul>
 {% endif %}
-<h1>Welcomea, {{ user.username }}</h1>
+<h1>Welcome, {{ user.username }}</h1>
 
 <ul class="nav nav-tabs" id="userTabs" role="tablist">
   <li class="nav-item" role="presentation">
-    <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="true">Dashboard</a>
+    <a class="nav-link " id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="true">Dashboard</a>
   </li>
   <li class="nav-item" role="presentation">
-    <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Profile</a>
+    <a class="nav-link active" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Profile</a>
   </li>
   <li class="nav-item" role="presentation">
     <a class="nav-link" id="subscription-tab" data-bs-toggle="tab" href="#subscription" role="tab" aria-controls="subscription" aria-selected="false">Subscription</a>
@@ -26,14 +33,14 @@
 
 <div class="tab-content" id="userTabsContent">
   <!-- Dashboard Tab -->
-  <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+  <div class="tab-pane fade " id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
     <h2>Dashboard</h2>
     <p>Here you can manage your subscriptions and view your data.</p>
     <div>
 
     
     {% if subscription_plan %}
-    <p>Your current subscription plan is: {{ subscription_plan }}</p>
+    <p>Your current subscription plan is: <span class="my-plan">{{ subscription_plan }}</span></p>
       {% else %}
           <p>You do not have an active subscription.</p>
       {% endif %}
@@ -41,11 +48,11 @@
   </div>
   
   <!-- Profile Tab -->
-  <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-    <h2>Profile</h2>
-    <p>Welcome, {{ user.username }}!</p>
-    <p>Email: {{ user.email }}</p>
-    <a href="{% url 'logout' %}">Logout</a>
+  <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+ 
+
+    {% include "profile.html" %}
+
   </div>
   
   <!-- Subscription Tab -->

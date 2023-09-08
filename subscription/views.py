@@ -12,6 +12,7 @@ import os
 from datetime import datetime, timedelta
 from .forms import CustomUserCreationForm, StripeSubscriptionForm
 from .models import Subscription, UserProfile, Profile
+from django.contrib.auth.forms import PasswordChangeForm
 
 User = get_user_model()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -173,14 +174,15 @@ def user_dashboard(request):
     else:
         form = StripeSubscriptionForm()
     # Mapping Stripe Plan IDs to human-readable names
-
+    
+    password_form = PasswordChangeForm(request.user)
 
     context = {
         'form': form,
         'STRIPE_PUBLIC_KEY': os.getenv('STRIPE_PUBLIC_KEY'),
         'stripe_session_id': stripe_session_id,
-        'subscription_plan': subscription_plan_name  # Adding the subscription plan to the context
-
+        'subscription_plan': subscription_plan_name,  # Adding the subscription plan to the context
+        'password_form': password_form
     }
 
     return render(request, 'user_dashboard.html', context)
@@ -325,3 +327,23 @@ def create_or_update_stripe_customer(user):
         print(f"Failed to create Stripe customer: {e}")
 
 
+"""
+FOR USER DASHBOARD
+"""
+
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Update the session hash to keep the user logged in
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'change_password.html', {'form': form})
