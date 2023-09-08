@@ -70,6 +70,16 @@
       <h1>"{{ sessionId}}"</h1>
       <div>Debug: Stripe Session ID is {{ stripe_session_id }}</div>
 
+
+      {% if subscription_plan == "Free" %}
+      <!-- Display Upgrade button -->
+      <button id="upgrade-button" type="submit">Upgrade</button>
+      {% elif subscription_plan == "Premium" %}
+          <!-- Display Downgrade button -->
+          <button id="downgrade-button" type="submit">Downgrade</button>
+      {% endif %}
+
+
     </form>
  
   </div>
@@ -89,23 +99,34 @@
         var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
         // Log the session ID for debugging
         var sessionId = "{{ stripe_session_id }}"; 
-        console.log("Session ID:", sessionId);
+        // console.log("Session ID:", sessionId);
+
+        
     
-        var form = document.getElementById("subscription-form");
-        var stripeButton = document.getElementById("stripe-button");
-        var subscribeButton = document.getElementById("subscribe-button");
-    
-        // Show or hide the Stripe button based on the plan selected
-        form.addEventListener("change", function() {
-          var planSelected = form.elements["stripe_plan_id"].value;
-          if (planSelected === "price_1NmG4RCOAyay7VTLPcRACV7i") {
-            stripeButton.style.display = "inline";
-            subscribeButton.style.display = "none";
-          } else {
-            stripeButton.style.display = "none";
-            subscribeButton.style.display = "inline";
-          }
-        });
+        const form = document.getElementById("subscription-form");
+    const upgradeButton = document.getElementById("upgrade-button");
+    const downgradeButton = document.getElementById("downgrade-button");
+    const stripeButton = document.getElementById("stripe-button");
+
+    form.addEventListener("change", function() {
+        const planSelected = form.elements["stripe_plan_id"].value;
+
+        if (planSelected === "price_1NmG4RCOAyay7VTLPcRACV7i") { // Premium Plan
+            if (subscription_plan === "Free") {
+                upgradeButton.style.display = "inline";
+                downgradeButton.style.display = "none";
+            } else {
+                stripeButton.style.display = "inline"; // or any other logic you have for premium users
+            }
+        } else { // Free Plan
+            if (subscription_plan === "Premium") {
+                downgradeButton.style.display = "inline";
+                upgradeButton.style.display = "none";
+            } else {
+                stripeButton.style.display = "none"; // or any other logic you have for free users
+            }
+        }
+    });
     
         // Stripe button click event
         stripeButton.addEventListener("click", function (event) {
@@ -130,6 +151,15 @@
           }
         });
       }; // End of script.onload
+
+
+
+//       document.getElementById("subscription-form").addEventListener("submit", function(e) {
+//     e.preventDefault();
+//     this.submit();
+//     // location.reload(true);  // Force a reload from the server
+// });
+
     }); // End of window.addEventListener
     </script>
     

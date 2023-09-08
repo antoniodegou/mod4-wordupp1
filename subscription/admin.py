@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Subscription, Canvas, SavedWork  # Import the necessary models
+from .models import CustomUser, Subscription, Canvas, SavedWork  # Import the necessary models
 
  
 # admin.site.register(User)

@@ -3,19 +3,36 @@ from django.conf import settings
 from datetime import datetime, timedelta
 from django.contrib.auth.models import AbstractUser, UserManager as DefaultUserManager
 from django.utils import timezone
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.conf import settings
 
- 
-
-
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True, blank=False, null=False)
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
+
+    def clean(self):
+        # Example validation (you can enhance or modify based on your needs)
+        if not self.stripe_customer_id:
+            raise ValidationError("Stripe customer ID is required!")
+
+    def fetch_stripe_customer(self):
+        """ Fetch and return this user's Stripe customer details. """
+        # You'd need to import and set up the Stripe library for this
+        # return stripe.Customer.retrieve(self.stripe_customer_id)
+        pass
+
+    def update_stripe_customer(self, **kwargs):
+        """ Update this user's Stripe customer details with the provided kwargs. """
+        # e.g., stripe.Customer.modify(self.stripe_customer_id, **kwargs)
+        pass
 
 # Canvas Model
 class Canvas(models.Model):
@@ -58,7 +75,9 @@ class Subscription(models.Model):
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     start_date = models.DateTimeField(auto_now_add=True)
-    end_date = models.DateTimeField(default=timezone.now)  # Consider using a custom function to set a future date
+    end_date = models.DateTimeField(default=timezone.now() + timedelta(days=30))
+
+# Consider using a custom function to set a future date
     is_premium = models.BooleanField(default=False)
     stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -93,7 +112,8 @@ class Subscription(models.Model):
 
     
     def is_active(self):
-       return self.status == 'active' and self.end_date > datetime.now()
+       return self.status == 'active' and self.end_date > timezone.now()
+
 
     def __str__(self):
         # return f"{self.user.username}'s Subscription"
@@ -102,6 +122,14 @@ class Subscription(models.Model):
 
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
- 
+
+
+
+
+class ActivityLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='activity_logs')
+    activity = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']

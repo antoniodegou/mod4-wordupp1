@@ -9,6 +9,12 @@ urlpatterns = [
     path('change-password/', PasswordChangeView.as_view(), name='password_change'),
     # path('register/', register_view, name='register'),
     # path('dashboard/', views.user_dashboard, name='dashboard'),  # Changed name to be unique
-    path('payment_success/', views.payment_success, name='payment_success'),
+    # path('payment_success/', views.payment_success, name='payment_success'),
     path('webhooks/stripe/', views.stripe_webhook, name='stripe-webhook'),
+    # path('webhooks/stripe/', views.stripe_webhook, name='stripe_webhook'),
+
+    path('webhooks/stripe/payment_success/', views.payment_success, name='stripe_payment_success_webhook'),
+
+
+
 ]

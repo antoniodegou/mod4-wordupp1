@@ -14,6 +14,6 @@ urlpatterns = [
     path('register/', register_view, name='register'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     # path('webhooks/stripe/', include('subscription.urls')),  # Make sure this line exists
-    path('webhooks/stripe/', include('subscription.urls')),
+    # path('webhooks/stripe/', include('subscription.urls')),
 
 ]

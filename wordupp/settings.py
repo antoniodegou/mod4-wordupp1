@@ -82,7 +82,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'wordupp.wsgi.application'
 
-STATICFILES_DIRS = [BASE_DIR / "static"]
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -165,3 +165,4 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 # Use database-backed sessions (this is the default setting)
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
+AUTH_USER_MODEL = 'subscription.CustomUser'

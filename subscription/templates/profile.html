@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="{% static 'subscription/css/logregister.css' %}">
 {% endblock %}
 <!-- Profile Section -->
-<div class="card mb-3 rounded-0">
+<div class="card mb-3 rounded-0 black-border">
   <div class="card-header bg-black text-white rounded-0">
       <h5><span class="icon-profile"></span> Profile Details</h5>
   </div>
@@ -18,8 +18,8 @@
 </div>
 
 <!-- Settings Section -->
-<div class="card mb-3 rounded-0">
-  <div class="card-header bg-black text-white rounded-0">
+<div class="card mb-3 rounded-0 black-border">
+  <div class="card-header bg-black text-white rounded-0 black-border">
       <h5><span class="icon-cog"></span> Account Settings</h5>
   </div>
   <div class="card-body">
@@ -31,7 +31,7 @@
 </div>
 
 <!-- Subscription Section (Optional) -->
-<div class="card mb-3  rounded-0">
+<div class="card mb-3  rounded-0 black-border">
   <div class="card-header bg-black text-white rounded-0">
       <h5><span class="icon-coin-dollar"></span> Subscription Status</h5>
   </div>
@@ -39,6 +39,11 @@
       <p><strong>Current Plan:</strong> {{ subscription_plan }}</p>
   </div>
 </div>
+
+
+<button type="button" class="btn btn-outline-primary rounded-0" data-bs-toggle="modal" data-bs-target="#activityHistoryModal">
+  View Activity History
+</button>
 
 
 
@@ -84,6 +89,32 @@
       </div>
   </div>
 </div>
+
+
+<!-- Activity History Modal -->
+<div class="modal fade" id="activityHistoryModal" tabindex="-1" aria-labelledby="activityHistoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-0">
+        <div class="modal-header">
+            <h5 class="modal-title" id="activityHistoryModalLabel">Activity History</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <ul class="list-group list-group-flush">
+                {% for activity in activities %}
+                <li class="list-group-item">
+                    <strong>{{ activity.action }}</strong> - {{ activity.timestamp|date:"F j, Y, g:i a" }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary rounded-0" data-bs-dismiss="modal">Close</button>
+        </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Tooltip Initialization Script -->
 <script>
