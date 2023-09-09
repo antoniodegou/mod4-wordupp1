@@ -103,7 +103,7 @@
             <ul class="list-group list-group-flush">
                 {% for activity in activities %}
                 <li class="list-group-item">
-                    <strong>{{ activity.action }}</strong> - {{ activity.timestamp|date:"F j, Y, g:i a" }}
+                    <strong>{{ activity.activity }}</strong> - {{ activity.timestamp|date:"F j, Y, g:i a" }}
                 </li>
                 {% endfor %}
             </ul>

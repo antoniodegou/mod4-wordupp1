@@ -57,111 +57,53 @@
   
   <!-- Subscription Tab -->
   <div class="tab-pane fade" id="subscription" role="tabpanel" aria-labelledby="subscription-tab">
+    <h2>Manage Subscription</h2>
+    <div>Stripe Session ID: {{ stripe_session_id }}</div>
 
-    <h2>Create Subscription</h2>
-    <form id="subscription-form" method="post" action="{% url 'dashboard' %}" >
-
-      {% csrf_token %}
-      {{ form }}
- 
-      <button id="stripe-button" type="submit" >Pay with Stripe</button>
-      <button id="subscribe-button" type="submit" style="display:none;">Subscribe</button>
-      <h1>"{{ stripe_session_id }}"</h1>
-      <h1>"{{ sessionId}}"</h1>
-      <div>Debug: Stripe Session ID is {{ stripe_session_id }}</div>
-
-
-      {% if subscription_plan == "Free" %}
-      <!-- Display Upgrade button -->
-      <button id="upgrade-button" type="submit">Upgrade</button>
-      {% elif subscription_plan == "Premium" %}
-          <!-- Display Downgrade button -->
-          <button id="downgrade-button" type="submit">Downgrade</button>
-      {% endif %}
-
-
-    </form>
- 
+    {% if subscription_plan == 'Free' %}
+      <form action="{% url 'upgrade_subscription' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" id="stripe-button">Upgrade to Premium</button>
+      </form>
+    {% elif subscription_plan == 'Premium' %}
+      <form action="{% url 'downgrade_subscription' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Downgrade to Free</button>
+      </form>
+    {% endif %}
   </div>
+</div>
 
  
-  <script>
-    // Wait for the entire page to load before executing the code
-    window.addEventListener('load', function() {
-      // Dynamically load Stripe.js
-      var script = document.createElement('script');
-      script.src = "https://js.stripe.com/v3/";
-      document.head.appendChild(script);
-    
-      // Initialize Stripe only after Stripe.js is loaded
-      script.onload = function() {
-        // Initialize Stripe
-        var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
-        // Log the session ID for debugging
-        var sessionId = "{{ stripe_session_id }}"; 
-        // console.log("Session ID:", sessionId);
+<script>
+  // Dynamically load Stripe.js
+  var script = document.createElement('script');
+  script.src = "https://js.stripe.com/v3/";
+  document.head.appendChild(script);
 
-        
-    
-        const form = document.getElementById("subscription-form");
-    const upgradeButton = document.getElementById("upgrade-button");
-    const downgradeButton = document.getElementById("downgrade-button");
-    const stripeButton = document.getElementById("stripe-button");
+  // Initialize Stripe only after Stripe.js is loaded
+  script.onload = function() {
+      var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+      var sessionId = "{{ stripe_session_id }}";
+      var stripeButton = document.getElementById("stripe-button");
 
-    form.addEventListener("change", function() {
-        const planSelected = form.elements["stripe_plan_id"].value;
-
-        if (planSelected === "price_1NmG4RCOAyay7VTLPcRACV7i") { // Premium Plan
-            if (subscription_plan === "Free") {
-                upgradeButton.style.display = "inline";
-                downgradeButton.style.display = "none";
-            } else {
-                stripeButton.style.display = "inline"; // or any other logic you have for premium users
-            }
-        } else { // Free Plan
-            if (subscription_plan === "Premium") {
-                downgradeButton.style.display = "inline";
-                upgradeButton.style.display = "none";
-            } else {
-                stripeButton.style.display = "none"; // or any other logic you have for free users
-            }
-        }
-    });
-    
-        // Stripe button click event
-        stripeButton.addEventListener("click", function (event) {
-          console.log("Stripe button clicked");
-          var selectedPlan = document.querySelector('input[name="stripe_plan_id"]:checked').value;
-          if (selectedPlan === 'price_1NmG4RCOAyay7VTLPcRACV7i') {
-            console.log("ABC" + sessionId);
-            if (sessionId) {
-              console.log("Form submitting...");
+      // Stripe button click event
+      stripeButton.addEventListener("click", function(event) {
+          if (sessionId) {
               stripe.redirectToCheckout({
-                sessionId: sessionId
-              }).then(function (result) {
-                if (result.error) {
-                  alert(result.error.message);
-                }
+                  sessionId: sessionId
+              }).then(function(result) {
+                  if (result.error) {
+                      alert(result.error.message);
+                  }
               });
-            } else {
-              alert("An error occurred. Please try again.");
-            }
           } else {
-            form.submit();  // Submit the form for the free plan
+              alert("An error occurred. Please try again.");
           }
-        });
-      }; // End of script.onload
+      });
+  };
+</script>
 
-
-
-//       document.getElementById("subscription-form").addEventListener("submit", function(e) {
-//     e.preventDefault();
-//     this.submit();
-//     // location.reload(true);  // Force a reload from the server
-// });
-
-    }); // End of window.addEventListener
-    </script>
     
 
     

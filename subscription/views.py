@@ -18,6 +18,8 @@ import stripe
 import logging
 from django.conf import settings
 from .models import CustomUser as User
+from django.views.decorators.http import require_POST
+
 logger = logging.getLogger(__name__)
 User = get_user_model()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -65,6 +67,9 @@ def register_view(request):
             handle_free_plan(user_profile, 'price_1NmG4RCOAyay7VTLqfqUxOud')  # Assuming 'price_1NmG4RCOAyay7VTLqfqUxOud' is your free plan ID
 
             messages.success(request, 'Registration successful.')
+            activity = ActivityLog(user=user, activity="User registered successfully.")
+            activity.save()
+
             return redirect('dashboard')  # Redirect to a new page
         else:
             messages.error(request, 'Unsuccessful registration. Invalid information.')
@@ -122,6 +127,30 @@ def create_stripe_checkout_session(stripe_customer_id, price_id='price_1NmG4RCOA
         logger.error(f"An error occurred while creating the Stripe session: {e}")
         return None
 
+
+@login_required
+@require_POST
+def upgrade_subscription(request):
+    """Handle logic for upgrading a user's subscription to premium."""
+    user_profile, _ = get_or_create_user_profile(request.user)
+    handle_premium_plan(user_profile, 'price_1NmG4RCOAyay7VTLPcRACV7i', request)  # Replace with your premium plan ID
+    activity = ActivityLog(user=request.user, activity="Upgraded to the Premium plan.")
+    activity.save()
+
+    messages.success(request, 'Successfully upgraded to the Premium plan!')
+    return redirect('dashboard')
+
+@login_required
+@require_POST
+def downgrade_subscription(request):
+    """Handle logic for downgrading a user's subscription to free."""
+    user_profile, _ = get_or_create_user_profile(request.user)
+    handle_free_plan(user_profile, 'price_1NmG4RCOAyay7VTLqfqUxOud')  # Replace with your free plan ID
+    activity = ActivityLog(user=user_profile.user, activity="Downgraded to the Free plan.")
+    activity.save()
+
+    messages.success(request, 'Successfully downgraded to the Free plan.')
+    return redirect('dashboard')
 
 def handle_form_submission(form, user_profile,request):
     """
@@ -194,11 +223,17 @@ def handle_premium_plan(user_profile, stripe_plan_id,request):
         subscription.status = 'active'
         subscription.save()
 
-    activity = ActivityLog(user=request.user, activity=f"You are now subscribed to the Premium plan!")
-    activity.save()
+
     messages.success(request, 'You are now subscribed to the Premium plan!')
 
 from django.views.decorators.cache import never_cache
+
+
+
+
+
+
+
 
 @never_cache
 @login_required
@@ -209,26 +244,21 @@ def user_dashboard(request):
         - request: HTTP request object.
     """
     user_profile, _ = get_or_create_user_profile(request.user)
-    subscription_plan = None  # Initialize here
-        # Check if user has a stripe_customer_id. If not, create a Stripe customer for them.
+    
+    # Check if user has a stripe_customer_id. If not, create a Stripe customer for them.
     if not user_profile.stripe_customer_id:
         customer = stripe.Customer.create(email=request.user.email)
         user_profile.stripe_customer_id = customer.id
         user_profile.save()
 
-    # stripe_session_id = None
-    # if subscription_plan == 'Premium':  # Adjust this condition if needed
     stripe_session_id = create_stripe_checkout_session(user_profile.stripe_customer_id)
-
-    # Fetching the Subscription
     
+    # Fetching the Subscription
     try:
         user_subscription = Subscription.objects.get(user_profile=user_profile)
-        subscription_plan = user_subscription.stripe_plan_id  
+        subscription_plan = user_subscription.stripe_plan_id  # This should be either 'free' or 'premium' or your Stripe Plan ID
     except Subscription.DoesNotExist:
-        logger.info(f"No subscription found for user: {request.user.username}")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred when fetching subscription for user: {request.user.username}. Error: {e}")
+        subscription_plan = None
 
     STRIPE_PLAN_NAMES = {
         'price_1NmG4RCOAyay7VTLqfqUxOud': 'Free',
@@ -236,30 +266,29 @@ def user_dashboard(request):
     }
 
     subscription_plan_name = STRIPE_PLAN_NAMES.get(subscription_plan, 'Unknown Plan!')
-    
-    if request.method == "POST":
-        print("Dashboard POST request received")
-        form = StripeSubscriptionForm(request.POST)
-        if form.is_valid():
-            print("Form is valid")
-            handle_form_submission(form, user_profile, request)
-    else:
-        form = StripeSubscriptionForm()
-    # Mapping Stripe Plan IDs to human-readable names
-    
-    password_form = PasswordChangeForm(request.user)
 
+    password_form = PasswordChangeForm(request.user)
     stripe_session_id = create_stripe_checkout_session(user_profile.stripe_customer_id)
 
+    # Retrieve the last 10 activities for the user
+    activities = ActivityLog.objects.filter(user=request.user)[:10]
+
     context = {
-        'form': form,
         'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,
         'stripe_session_id': stripe_session_id,
         'subscription_plan': subscription_plan_name,  # Adding the subscription plan to the context
-        'password_form': password_form
+        'password_form': password_form,
+        'activities': activities,
     }
 
     return render(request, 'user_dashboard.html', context)
+
+
+
+
+
+
+
 
 
 def payment_success(request):
