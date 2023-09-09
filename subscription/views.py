@@ -10,7 +10,7 @@ from django.conf import settings
 import stripe
 import os
 from datetime import datetime, timedelta
-from .forms import CustomUserCreationForm, StripeSubscriptionForm
+from .forms import CustomUserCreationForm 
 from .models import Subscription, UserProfile
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import ActivityLog
@@ -19,6 +19,15 @@ import logging
 from django.conf import settings
 from .models import CustomUser as User
 from django.views.decorators.http import require_POST
+
+import traceback
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
+
+
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -315,10 +324,7 @@ These functions are triggered by Stripe events and update the application state 
  
 
 
-import traceback
-from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
+
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -341,6 +347,14 @@ def stripe_webhook(request):
             logger.info("Handling checkout.session.completed event.")
             # print(f"Full Stripe event payload: {event}")
             session = event['data']['object']
+            # Extracting the payment amount
+            payment_amount = session['amount_total'] / 100  # This gives the amount in dollars, assuming the currency is USD.
+        
+            activity_message = f"Payment of ${payment_amount} was successful!"
+            ActivityLog.objects.create(user=user, activity=activity_message)
+
+
+
             if session.get('mode') != 'subscription':
                 logger.error("Received a session completed event that's not related to a subscription.")
                 return JsonResponse({'status': 'failure', 'error': 'Invalid session type'}, status=400)
@@ -439,8 +453,7 @@ def create_or_update_stripe_customer(user):
 FOR USER DASHBOARD
 """
 
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
+
 
 def change_password(request):
     if request.method == 'POST':
