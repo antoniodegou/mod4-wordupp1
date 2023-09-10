@@ -1,0 +1,175 @@
+<!-- Subscription Overview -->
+<div class="mt-4">
+    <h3>Subscription Overview</h3>
+    {% if subscription_plan == "Premium" %}
+        <div class="alert alert-success mt-3">
+            You have a Premium subscription!
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-3">
+            You have a Free subscription!
+        </div>
+    {% endif %}
+</div>
+
+<!-- Subscription Plan and Renewal Date -->
+<div class="mt-4">
+    <p><strong>Current Plan:</strong> {{ subscription_plan }}</p>
+    {% if subscription_plan == 'Premium' %}
+    <p><strong>Renewal Date:</strong> {{ renewal_date|date:"F d, Y" }}</p>
+    {% endif %}
+</div>
+
+<!-- Upgrade/Downgrade Options -->
+<div class="mt-4">
+    <h1>{{ subscription_plan }}</h1>
+    {% if subscription_plan == 'Free' %}
+        <form action="{% url 'upgrade_subscription' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success" id="stripe-button">Upgrade to Premium</button>
+        </form>
+    {% else%}
+        <form action="{% url 'downgrade_subscription' %}" method="post" class="mt-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning">Downgrade to Free</button>
+        </form>
+    {% endif %}
+</div>
+
+<!-- Delete Account Option -->
+<div class="mt-4">
+    <p><strong>Delete Account:</strong></p>
+    <div class="alert alert-danger">
+        Warning: Deleting your account will also cancel your subscription and remove all associated data. This action is irreversible.
+        <a href="{% url 'delete_account' %}" class="btn btn-danger mt-2">Delete My Account</a>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+{% if subscription_plan == 'Free' %}
+<!-- <form action="{% url 'upgrade_subscription' %}" method="post"> -->
+    <script>
+        // Dynamically load Stripe.js
+        var script = document.createElement('script');
+        script.src = "https://js.stripe.com/v3/";
+        document.head.appendChild(script);
+      
+        // Initialize Stripe only after Stripe.js is loaded
+        script.onload = function() {
+            var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+            var sessionId = "{{ stripe_session_id }}";
+            var stripeButton = document.getElementById("stripe-button");
+      
+            // Stripe button click event
+            stripeButton.addEventListener("click", function(event) {
+                if (sessionId) {
+                    stripe.redirectToCheckout({
+                        sessionId: sessionId
+                    }).then(function(result) {
+                        if (result.error) {
+                            alert(result.error.message);
+                        }
+                    });
+                } else {
+                    alert("An error occurred. Please try again.");
+                }
+            });
+        };
+      </script>
+<!-- </form> -->
+ 
+ 
+{% endif %}
+
+<!-- <script>
+    console.log("Testing console log");
+</script>
+
+<script>
+    console.log("Testing console log at the top");
+    var stripe; // Define stripe globally so we can use it everywhere
+
+    var script = document.createElement('script');
+    script.src = "https://js.stripe.com/v3/";
+    document.head.appendChild(script);
+
+    script.onload = function() {
+        stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}"); // Initialize Stripe with your public key
+        
+        var subscription_plan = "{{ subscription_plan }}";
+        var sessionId = "{{ stripe_session_id }}"; // Move sessionId definition here
+        console.log("Stripe initialized");
+
+        var elements = stripe.elements();
+        var card = elements.create('card');
+        card.mount('#card-element');
+
+        card.addEventListener('change', function(event) {
+            var displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
+        var form = document.querySelector('#billingForm');
+        if(form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                stripe.createPaymentMethod('card', card).then(function(result) {
+                    if (result.error) {
+                        var errorElement = document.querySelector('.error');
+                        errorElement.textContent = result.error.message;
+                    } else {
+                        var hiddenInput = document.createElement('input');
+                        hiddenInput.setAttribute('type', 'hidden');
+                        hiddenInput.setAttribute('name', 'stripeToken');
+                        hiddenInput.setAttribute('value', result.paymentMethod.id);
+                        form.appendChild(hiddenInput);
+                        form.submit();
+                    }
+                });
+            });
+        } else {
+            console.error("#billingForm not found");
+        }
+    }
+    var subscription_plan = "{{ subscription_plan }}";
+console.log("Subscription Plan:", subscription_plan);
+</script>
+
+{% if subscription_plan != 'Premium' %}
+<script>
+
+    var stripeButton = document.getElementById("stripe-button");
+    if(stripeButton) {
+        stripeButton.addEventListener("click", function(event) {
+            if (sessionId) {
+                stripe.redirectToCheckout({
+                    sessionId: sessionId
+                }).then(function(result) {
+                    if (result.error) {
+                        console.error("Stripe Checkout Error:", result.error.message);
+                        alert(result.error.message);
+                    }
+                }).catch(function(error) {
+                    console.error("Caught Stripe Error:", error);
+                });
+            } else {
+                alert("An error occurred. Please try again.");
+            }
+        });
+    } else {
+        console.error("#stripe-button not found");
+    }
+</script>
+{% endif %} -->

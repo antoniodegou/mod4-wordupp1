@@ -1,0 +1,163 @@
+<!-- profile.html -->
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'subscription/css/logregister.css' %}">
+{% endblock %}
+<!-- Profile Section -->
+<div class="card mb-3 rounded-0 black-border">
+  <div class="card-header bg-black text-white rounded-0">
+      <h5><span class="icon-profile"></span> Profile Details</h5>
+  </div>
+  <div class="card-body">
+      <p><strong>Username:</strong> {{ user.username }}</p>
+      <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>Date Joined:</strong> {{ user.date_joined|date:"F j, Y" }}</p>
+  </div>
+</div>
+
+<!-- Settings Section -->
+<div class="card mb-3 rounded-0 black-border">
+  <div class="card-header bg-black text-white rounded-0 black-border">
+      <h5><span class="icon-cog"></span> Account Settings</h5>
+  </div>
+  <div class="card-body">
+      <button type="button" class="btn btn-primary rounded-0 bg-yellow btn-lg" data-bs-toggle="modal" data-bs-target="#passwordChangeModal">
+        Change Password
+      </button>
+      
+  </div>
+</div>
+
+<!-- Subscription Section (Optional) -->
+<div class="card mb-3  rounded-0 black-border">
+  <div class="card-header bg-black text-white rounded-0">
+      <h5><span class="icon-coin-dollar"></span> Subscription Status</h5>
+  </div>
+  <div class="card-body">
+      <p><strong>Current Plan:</strong> {{ subscription_plan }}</p>
+  </div>
+</div>
+
+
+<button type="button" class="btn btn-outline-primary rounded-0" data-bs-toggle="modal" data-bs-target="#activityHistoryModal">
+  View Activity History
+</button>
+
+
+
+ 
+<!-- Password Change Modal -->
+<div class="modal fade  " id="passwordChangeModal" tabindex="-1" aria-labelledby="passwordChangeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-0">
+          <div class="modal-header">
+              <h5 class="modal-title" id="passwordChangeModalLabel">Change Password</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <form id="passwordChangeForm" method="post" action="{% url 'password_change' %}" class="bg-red p-4">
+                  {% csrf_token %}
+                  
+                  <!-- Old Password -->
+                  <div class="form-floating mb-3">
+                      <input type="password" name="old_password" class="form-control rounded-0" id="{{ password_form.old_password.id_for_label }}" placeholder="Old Password">
+                      <label for="{{ password_form.old_password.id_for_label }}">Old Password</label>
+                  </div>
+                  
+                  <!-- New Password -->
+                  <div class="form-floating mb-3">
+                      <input type="password" name="new_password1" class="form-control rounded-0" id="{{ password_form.new_password1.id_for_label }}" placeholder="New Password">
+                      <label for="{{ password_form.new_password1.id_for_label }}">New Password</label>
+                      <span class="position-absolute top-0 end-0  pt-2 mt-1 me-2" data-bs-toggle="tooltip" data-bs-html="true" title="<ul class='text-start'><li>Your password can’t be too similar to your other personal information.</li><li>Your password must contain at least 8 characters.</li><li>Your password can’t be a commonly used password.</li><li>Your password can’t be entirely numeric.</li></ul>" data-bs-custom-class="tooltip-custom">
+                          <span class="icon-question-circle"></span>
+                      </span>
+                  </div>
+
+                  <!-- Confirm New Password -->
+                  <div class="form-floating mb-3">
+                      <input type="password" name="new_password2" class="form-control rounded-0" id="{{ password_form.new_password2.id_for_label }}" placeholder="Confirm New Password">
+                      <label for="{{ password_form.new_password2.id_for_label }}">Confirm New Password</label>
+                  </div>
+                  
+                  <!-- Submit Button -->
+                  <button type="submit" class="btn btn-primary rounded-0 bg-yellow btn-lg">Change Password</button>
+
+              </form>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+<!-- Activity History Modal -->
+<div class="modal fade" id="activityHistoryModal" tabindex="-1" aria-labelledby="activityHistoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-0">
+        <div class="modal-header">
+            <h5 class="modal-title" id="activityHistoryModalLabel">Activity History</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <ul class="list-group list-group-flush">
+                {% for activity in activities %}
+                <li class="list-group-item">
+                    <strong>{{ activity.activity }}</strong> - {{ activity.timestamp|date:"F j, Y, g:i a" }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary rounded-0" data-bs-dismiss="modal">Close</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Tooltip Initialization Script -->
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl, {
+      customClass: 'tooltip-custom'
+    })
+  })
+});
+</script>
+
+
+
+<script>
+  
+  document.addEventListener("DOMContentLoaded", function() {
+    const passwordChangeForm = document.getElementById("passwordChangeForm");
+    passwordChangeForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(passwordChangeForm);
+        const xhr = new XMLHttpRequest();
+        
+        xhr.open("POST", passwordChangeForm.action, true);
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 400) {
+                const data = JSON.parse(xhr.responseText);
+                if (data.success) {
+                    const passwordChangeModal = bootstrap.Modal.getInstance(document.getElementById("passwordChangeModal"));
+                    passwordChangeModal.hide();
+                    // Display a success message or any other behavior here
+                } else {
+                    // Handle errors
+                }
+            } else {
+                // Handle errors
+            }
+        };
+        xhr.send(formData);
+    });
+});
+
+
+</script>

@@ -257,14 +257,19 @@ def user_dashboard(request):
     try:
         user_subscription = Subscription.objects.get(user_profile=user_profile)
         subscription_plan = user_subscription.stripe_plan_id  # This should be either 'free' or 'premium' or your Stripe Plan ID
+        renewal_date = user_subscription.end_date  # Get the renewal date
+
     except Subscription.DoesNotExist:
         subscription_plan = None
+        renewal_date = None
 
     STRIPE_PLAN_NAMES = {
-        'price_1NmG4RCOAyay7VTLqfqUxOud': 'Free',
-        'price_1NmG4RCOAyay7VTLPcRACV7i': 'Premium'
+        # 'price_1NmG4RCOAyay7VTLqfqUxOud': 'Free',
+        # 'price_1NmG4RCOAyay7VTLPcRACV7i': 'Premium'
+            'free_plan_id': 'Free',
+    'premium_plan_id': 'Premium'
     }
-
+    print("DEBUG: User's subscription plan:", subscription_plan)
     subscription_plan_name = STRIPE_PLAN_NAMES.get(subscription_plan, 'Unknown Plan!')
 
     password_form = PasswordChangeForm(request.user)
@@ -279,6 +284,7 @@ def user_dashboard(request):
         'subscription_plan': subscription_plan_name,  # Adding the subscription plan to the context
         'password_form': password_form,
         'activities': activities,
+        'renewal_date': renewal_date,
     }
 
     return render(request, 'user_dashboard.html', context)
@@ -286,22 +292,25 @@ def user_dashboard(request):
 
 
 
-
-
-
+ 
 
 
 def payment_success(request):
     # In a real-world application, you'd use the Stripe API to verify the payment
     # and potentially the session ID that Stripe passes back as a GET parameter.
 
+    user_profile, _ = get_or_create_user_profile(request.user)
+
     # Update the user's subscription status in your database here.
-    # For example, change their 'role' from 'free' to 'premium', or extend their subscription date.
+    user_subscription = Subscription.objects.get(user_profile=user_profile)
+    user_subscription.stripe_plan_id = "premium_plan_id"  # Replace with your Stripe's premium plan ID
+    user_subscription.save()
 
     messages.success(request, 'Your payment was successful!')
     activity = ActivityLog(user=request.user, activity=f"You are now subscribed to the Premium plan!")
     activity.save()
     return redirect('dashboard')
+
  
  
 """
@@ -358,6 +367,7 @@ def stripe_webhook(request):
 
             stripe_subscription = stripe.Subscription.retrieve(subscription_id)
             stripe_plan_id = stripe_subscription['plan']['id']
+            logger.info(f"HAAAYDEBUG: Stripe Plan ID from Webhook: {stripe_plan_id}")
 
             customer = stripe.Customer.retrieve(customer_id)
             try:
@@ -436,7 +446,7 @@ def create_or_update_stripe_customer(user):
 
 
 """
-FOR USER DASHBOARD
+FOR USER PROFILE DASHBOARD
 """
 
 from django.contrib.auth import update_session_auth_hash
@@ -460,3 +470,73 @@ def change_password(request):
 def get_recent_activities(request):
     activities = ActivityLog.objects.filter(user=request.user)[:10]  # get the last 10 activities
     return JsonResponse({'activities': [act.activity for act in activities]})
+
+
+"""
+FOR USER SUBSCRIPTION DASHBOARD
+"""
+
+
+@login_required
+def delete_account(request):
+    """
+    Handle account and subscription deletion for the logged-in user.
+    """
+    user = request.user
+
+    # Cancel user's Stripe subscription if exists
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+        customer_id = user_profile.stripe_customer_id
+        subscriptions = stripe.Customer.list_subscriptions(customer_id)
+        for sub in subscriptions['data']:
+            stripe.Subscription.delete(sub.id)
+    except Exception as e:
+        logger.error(f"Failed to delete Stripe subscription: {e}")
+
+    # Delete the user's associated data here, if any
+    # For example, you might have other models tied to the user
+    # that you'd like to delete or modify.
+
+    # Delete the user's account
+    user.delete()
+
+    messages.success(request, "Account successfully deleted.")
+    return redirect('homepage')  # Or wherever you want to redirect after account deletion
+
+
+@login_required
+@require_POST
+def upgrade_subscription(request):
+    """Initiate the process for upgrading a user's subscription to premium."""
+    user_profile, _ = get_or_create_user_profile(request.user)
+    
+    # Redirect the user to Stripe for payment
+    stripe_session_id = create_stripe_checkout_session(user_profile.stripe_customer_id)
+    
+    if not stripe_session_id:
+        messages.error(request, "Failed to initiate payment with Stripe.")
+        return redirect('dashboard')
+
+    return redirect(f"https://checkout.stripe.com/pay/{stripe_session_id}")
+
+
+@login_required
+def downgrade_subscription(request):
+    """
+    Handle logic after a successful downgrade to a free subscription.
+    """
+    user_profile, _ = get_or_create_user_profile(request.user)
+    
+    # Here, you would use Stripe's API to confirm the successful downgrade
+    # and update the user's subscription status in your database.
+
+    # Assuming you've saved the user's new subscription status:
+    user_subscription = Subscription.objects.get(user_profile=user_profile)
+    user_subscription.stripe_plan_id = "free_plan_id"  # Replace with your Stripe's free plan ID
+    user_subscription.save()
+
+    messages.success(request, "Successfully downgraded to Free plan.")
+    activity = ActivityLog(user=request.user, activity="Downgraded to the Free plan.")
+    activity.save()
+    return redirect('dashboard')

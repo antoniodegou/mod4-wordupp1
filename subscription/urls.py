@@ -12,10 +12,11 @@ urlpatterns = [
     # path('payment_success/', views.payment_success, name='payment_success'),
     path('webhooks/stripe/', views.stripe_webhook, name='stripe-webhook'),
     # path('webhooks/stripe/', views.stripe_webhook, name='stripe_webhook'),
-    path('upgrade/', views.upgrade_subscription, name='upgrade_subscription'),
-    path('downgrade/', views.downgrade_subscription, name='downgrade_subscription'),
+ 
     path('webhooks/stripe/payment_success/', views.payment_success, name='stripe_payment_success_webhook'),
 
-
+    path('upgrade/', views.upgrade_subscription, name='upgrade_subscription'),
+    path('downgrade/', views.downgrade_subscription, name='downgrade_subscription'),
+    path('delete_account/', views.delete_account, name='delete_account'),
 
 ]
