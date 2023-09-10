@@ -189,7 +189,8 @@ def handle_free_plan(user_profile, stripe_plan_id):
         user_profile=user_profile,
         defaults={
             'start_date': datetime.now(),
-            'end_date': datetime.now() + timedelta(days=30),
+            # 'end_date': datetime.now() + timedelta(days=30),
+            'end_date': datetime.now()  + timedelta(minutes=3),
             'stripe_plan_id': stripe_plan_id,
             'status': 'active'  # or 'free' if you want a separate status for free plans
         }
@@ -198,7 +199,8 @@ def handle_free_plan(user_profile, stripe_plan_id):
     if not created:
         # Update other fields if subscription already exists
         subscription.start_date = datetime.now()
-        subscription.end_date = datetime.now() + timedelta(days=30)
+        # subscription.end_date = datetime.now() + timedelta(days=30)
+        subscription.end_date = datetime.now() + timedelta(minutes=3)
         subscription.stripe_plan_id = stripe_plan_id
         subscription.status = 'active'  # or 'free'
         subscription.save()
@@ -220,14 +222,17 @@ def handle_premium_plan(user_profile, stripe_plan_id,request):
         user_profile=user_profile,
         defaults={
             'start_date': datetime.now(),
-            'end_date': datetime.now() + timedelta(days=30),  # Adjust this based on your premium plan duration
+            # 'end_date': datetime.now() + timedelta(days=30),  # Adjust this based on your premium plan duration
+             'end_date': datetime.now()  + timedelta(minutes=3),  # Adjust this based on your premium plan duration
             'stripe_plan_id': stripe_plan_id,
         }
     )
     if not created:
         # Update other fields if subscription already exists
         subscription.start_date = datetime.now()
-        subscription.end_date = datetime.now() + timedelta(days=30)  # Adjust this based on your premium plan duration
+        # subscription.end_date = datetime.now() + timedelta(days=30)  # Adjust this based on your premium plan duration
+        subscription.end_date = datetime.now() + timedelta(minutes=3)
+
         subscription.stripe_plan_id = stripe_plan_id
         subscription.status = 'active'
         subscription.save()
@@ -525,7 +530,7 @@ def delete_account(request):
     user.delete()
 
     messages.success(request, "Account successfully deleted.")
-    return redirect('homepage')  # Or wherever you want to redirect after account deletion
+    return redirect('/')  # Or wherever you want to redirect after account deletion
 
 
 @login_required

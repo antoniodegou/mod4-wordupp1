@@ -40,11 +40,32 @@
     <p><strong>Delete Account:</strong></p>
     <div class="alert bg-red rounded-0">
         Warning: Deleting your account will also cancel your subscription and remove all associated data. This action is irreversible.<br>
-        <a href="{% url 'delete_account' %}" class="btn btn-danger mt-2 btn-lg rounded-0">Delete My Account</a>
+        <!-- <a href="{% url 'delete_account' %}" class="btn btn-danger mt-2 btn-lg rounded-0">Delete My Account</a> -->
+        <button type="button" class="btn btn-danger mt-2 btn-lg rounded-0" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">Delete My Account</button>
+
     </div>
 </div>
 
 
+<!-- sure you want to delete -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-red rounded-0 black-border">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body ">
+          Warning: Deleting your account will also cancel your subscription and remove all associated data. This action is irreversible. Are you sure you want to proceed?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-lg rounded-0" data-bs-dismiss="modal">Close</button>
+          <a href="{% url 'delete_account' %}" class="btn btn-danger btn-lg rounded-0">Delete My Account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 
 
 
