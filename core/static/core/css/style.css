@@ -8,7 +8,8 @@
     --black: #090909;
     --lineWidth: 3px;
     --shadow:  0 10px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19) !important;
-    --border: var(--lineWidth) solid var(--black)
+    --border: var(--lineWidth) solid var(--black);
+    --bs-navbar-color: var(--white)!important;
 }
 
 html,body{
@@ -52,6 +53,12 @@ html,body{
 
 .text-white, nav a{
     color:var(--white)!important;
+}
+
+.icon-list{
+  background-color: var(--red)!important;
+  color: var(--black);
+  /* border: var(--white) var(--lineWidth) solid!important; */
 }
 
 .black-border{
@@ -159,3 +166,4 @@ font-size: 2rem;
 .icon-text-document-inverted:before {
   content: "\e905";
 }
+ 

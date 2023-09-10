@@ -3,15 +3,23 @@ root{
     --bs-body-bg: var(--pink)!important;
 }
 
-#dashboard-tab,#profile-tab, #subscription-tab, .tab-pane{
+  .tab-pane{
     border: var(--border);
 }
 
 #dashboard-tab,#profile-tab, #subscription-tab{
+    background-color: var(--red);
     border-bottom: none;
+    color: var(--white);
 }
+
+#subscription-tab.active, #profile-tab.active{
+    background-color: var(--black)!important;
+ 
+}
+
 .tab-pane{
-    background-color: var(--yellow);
+    background-color: var(--white);
    padding:1rem;
 }
 
@@ -19,4 +27,8 @@ root{
     border: var(--border);
     background-color: var(--white);
     padding: 0 1rem ;
+}
+
+form{
+    border: unset!important;;
 }

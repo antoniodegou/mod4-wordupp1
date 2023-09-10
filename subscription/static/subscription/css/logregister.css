@@ -1,6 +1,6 @@
-form{
+/* form{
     border:var(--border);
-}
+} */
 
 input{
     border:var(--border)!important;

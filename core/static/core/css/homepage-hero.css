@@ -75,6 +75,12 @@
 
 
 
+root{
+    --bs-tertiary-bg-rgb:rgba(0,0,0,0)!important;
+}
 
-
- 
+.bg-body-tertiary {
+    /* --bs-bg-opacity: 0; */
+    background-color: rgba(0,0,0,0)!important;
+    /* background: unset; */
+}

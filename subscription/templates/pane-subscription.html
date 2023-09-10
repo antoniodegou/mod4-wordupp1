@@ -1,7 +1,7 @@
 <!-- Subscription Overview -->
 <div class="mt-4">
     <h3>Subscription Overview</h3>
-    <div class="alert {% if subscription_plan == 'Premium' or previous_subscription_plan == 'Premium' %}alert-success{% else %}alert-info{% endif %} mt-3">
+    <div class="rounded-0 black-border alert {% if subscription_plan == 'Premium' or previous_subscription_plan == 'Premium' %}alert-success{% else %}alert-info{% endif %} mt-3">
         {% if subscription_plan == 'Premium' or previous_subscription_plan == 'Premium' %}
             You have a Premium subscription!
         {% else %}
@@ -25,12 +25,12 @@
     {% if subscription_plan == 'Free' %}
         <form action="{% url 'upgrade_subscription' %}" method="post">
             {% csrf_token %}
-            <button type="submit" class="btn btn-success" id="stripe-button">Upgrade to Premium</button>
+            <button type="submit" class="btn rounded-0 bg-pink btn-lg" id="stripe-button">Upgrade to Premium</button>
         </form>
     {% else %}
         <form action="{% url 'downgrade_subscription' %}" method="post" class="mt-2">
             {% csrf_token %}
-            <button type="submit" class="btn btn-warning">Downgrade to Free</button>
+            <button type="submit" class="btn rounded-0 bg-red btn-lg">Downgrade to Free</button>
         </form>
     {% endif %}
 </div>
@@ -38,9 +38,9 @@
 <!-- Delete Account Option -->
 <div class="mt-4">
     <p><strong>Delete Account:</strong></p>
-    <div class="alert alert-danger">
-        Warning: Deleting your account will also cancel your subscription and remove all associated data. This action is irreversible.
-        <a href="{% url 'delete_account' %}" class="btn btn-danger mt-2">Delete My Account</a>
+    <div class="alert bg-red rounded-0">
+        Warning: Deleting your account will also cancel your subscription and remove all associated data. This action is irreversible.<br>
+        <a href="{% url 'delete_account' %}" class="btn btn-danger mt-2 btn-lg rounded-0">Delete My Account</a>
     </div>
 </div>
 
