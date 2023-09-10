@@ -3,20 +3,20 @@ from .models import Subscription  # Import your model here
 from django.contrib.auth.forms import UserCreationForm
 from subscription.models import CustomUser
  
-class SubscriptionForm(forms.ModelForm):
-    class Meta:
-        model = Subscription
-        fields = ['stripe_plan_id']
+# class SubscriptionForm(forms.ModelForm):
+#     class Meta:
+#         model = Subscription
+#         fields = ['stripe_plan_id']
 
 
 
-class StripeSubscriptionForm(forms.Form):
-    STRIPE_PLAN_CHOICES = [
-        ('price_1NmG4RCOAyay7VTLqfqUxOud', 'Free'),
-        ('price_1NmG4RCOAyay7VTLPcRACV7i', 'Premium ($1.99/month)'),
-    ]
+# class StripeSubscriptionForm(forms.Form):
+#     STRIPE_PLAN_CHOICES = [
+#         ('price_1NmG4RCOAyay7VTLqfqUxOud', 'Free'),
+#         ('price_1NmG4RCOAyay7VTLPcRACV7i', 'Premium ($1.99/month)'),
+#     ]
     
-    stripe_plan_id = forms.ChoiceField(choices=STRIPE_PLAN_CHOICES, widget=forms.RadioSelect)
+#     stripe_plan_id = forms.ChoiceField(choices=STRIPE_PLAN_CHOICES, widget=forms.RadioSelect)
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -28,6 +28,12 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'password1', 'password2')
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email already exists.")
+        return email
 
     def save(self, commit=True):
         user = super().save(commit=False)

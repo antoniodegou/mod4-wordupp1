@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.urls import path
 from django.contrib.auth.views import LoginView, LogoutView
-from subscription.views import user_dashboard
 from subscription.views import register_view, user_dashboard
 
 urlpatterns = [
