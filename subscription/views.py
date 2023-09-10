@@ -272,11 +272,14 @@ def user_dashboard(request):
         subscription_plan = None
         renewal_date = None
 
+
+
+
     STRIPE_PLAN_NAMES = {
-        # 'price_1NmG4RCOAyay7VTLqfqUxOud': 'Free',
-        # 'price_1NmG4RCOAyay7VTLPcRACV7i': 'Premium'
-            'free_plan_id': 'Free',
-    'premium_plan_id': 'Premium'
+        'free_plan_id': 'Free',
+        'price_1NmG4RCOAyay7VTLPcRACV7i': 'Premium',
+        'price_1NmG4RCOAyay7VTLqfqUxOud': 'Free',
+        'premium_plan_id': 'Premium'
     }
     print("DEBUG: User's subscription plan:", subscription_plan)
     subscription_plan_name = STRIPE_PLAN_NAMES.get(subscription_plan, 'Unknown Plan!')
@@ -286,12 +289,19 @@ def user_dashboard(request):
 
     # Retrieve the last 10 activities for the user
     activities = ActivityLog.objects.filter(user=request.user)[:10]
+    # Check the previous plan before the most recent change
+
+    previous_subscription_plan = None
+    if subscription_plan == 'free_plan_id' and renewal_date and renewal_date > timezone.now():
+        previous_subscription_plan = 'Premium'
+
 
     context = {
         'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,
         'stripe_session_id': stripe_session_id,
         'subscription_plan': subscription_plan_name,  # Adding the subscription plan to the context
         'password_form': password_form,
+        'previous_subscription_plan': previous_subscription_plan,
         'activities': activities,
         'renewal_date': renewal_date,
     }

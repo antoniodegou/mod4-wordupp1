@@ -1,34 +1,33 @@
 <!-- Subscription Overview -->
 <div class="mt-4">
     <h3>Subscription Overview</h3>
-    {% if subscription_plan == "Premium" %}
-        <div class="alert alert-success mt-3">
+    <div class="alert {% if subscription_plan == 'Premium' or previous_subscription_plan == 'Premium' %}alert-success{% else %}alert-info{% endif %} mt-3">
+        {% if subscription_plan == 'Premium' or previous_subscription_plan == 'Premium' %}
             You have a Premium subscription!
-        </div>
-    {% else %}
-        <div class="alert alert-info mt-3">
+        {% else %}
             You have a Free subscription!
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
 </div>
 
 <!-- Subscription Plan and Renewal Date -->
 <div class="mt-4">
-    <p><strong>Current Plan:</strong> {{ subscription_plan }}</p>
-    {% if subscription_plan == 'Premium' %}
-    <p><strong>Renewal Date:</strong> {{ renewal_date|date:"F d, Y" }}</p>
+    <p><strong>Technical Plan:</strong> {{ subscription_plan }}</p>
+    {% if previous_subscription_plan == 'Premium' %}
+        <p>You've recently downgraded from Premium, but you can still access Premium features until <strong>{{ renewal_date|date:"F d, Y" }}</strong>.</p>
+    {% elif subscription_plan == 'Premium' %}
+        <p><strong>Renewal Date:</strong> {{ renewal_date|date:"F d, Y" }}</p>
     {% endif %}
 </div>
 
 <!-- Upgrade/Downgrade Options -->
 <div class="mt-4">
-    <h1>{{ subscription_plan }}</h1>
     {% if subscription_plan == 'Free' %}
         <form action="{% url 'upgrade_subscription' %}" method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-success" id="stripe-button">Upgrade to Premium</button>
         </form>
-    {% else%}
+    {% else %}
         <form action="{% url 'downgrade_subscription' %}" method="post" class="mt-2">
             {% csrf_token %}
             <button type="submit" class="btn btn-warning">Downgrade to Free</button>
@@ -44,7 +43,6 @@
         <a href="{% url 'delete_account' %}" class="btn btn-danger mt-2">Delete My Account</a>
     </div>
 </div>
-
 
 
 
