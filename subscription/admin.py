@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import CustomUser, Subscription, Canvas, SavedWork  # Import the necessary models
+from .models import CustomUser, Subscription ,ActivityLog , UserProfile # Import the necessary models
 
- 
-# admin.site.register(User)
+admin.site.register( UserProfile)
+admin.site.register(CustomUser)
 admin.site.register(Subscription)
-admin.site.register(Canvas)
-admin.site.register(SavedWork)
+
+admin.site.register(ActivityLog)

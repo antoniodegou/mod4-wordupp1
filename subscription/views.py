@@ -223,7 +223,7 @@ def handle_premium_plan(user_profile, stripe_plan_id,request):
         defaults={
             'start_date': datetime.now(),
             # 'end_date': datetime.now() + timedelta(days=30),  # Adjust this based on your premium plan duration
-             'end_date': datetime.now()  + timedelta(minutes=3),  # Adjust this based on your premium plan duration
+            'end_date': datetime.now()  + timedelta(minutes=3),  # Adjust this based on your premium plan duration
             'stripe_plan_id': stripe_plan_id,
         }
     )
@@ -281,10 +281,10 @@ def user_dashboard(request):
 
 
     STRIPE_PLAN_NAMES = {
-        'free_plan_id': 'Free',
+        # 'free_plan_id': 'Free',
         'price_1NmG4RCOAyay7VTLPcRACV7i': 'Premium',
         'price_1NmG4RCOAyay7VTLqfqUxOud': 'Free',
-        'premium_plan_id': 'Premium'
+        # 'premium_plan_id': 'Premium'
     }
     print("DEBUG: User's subscription plan:", subscription_plan)
     subscription_plan_name = STRIPE_PLAN_NAMES.get(subscription_plan, 'Unknown Plan!')
@@ -297,7 +297,7 @@ def user_dashboard(request):
     # Check the previous plan before the most recent change
 
     previous_subscription_plan = None
-    if subscription_plan == 'free_plan_id' and renewal_date and renewal_date > timezone.now():
+    if subscription_plan == 'price_1NmG4RCOAyay7VTLqfqUxOud' and renewal_date and renewal_date > timezone.now():
         previous_subscription_plan = 'Premium'
 
 
@@ -327,7 +327,7 @@ def payment_success(request):
 
     # Update the user's subscription status in your database here.
     user_subscription = Subscription.objects.get(user_profile=user_profile)
-    user_subscription.stripe_plan_id = "premium_plan_id"  # Replace with your Stripe's premium plan ID
+    user_subscription.stripe_plan_id = "price_1NmG4RCOAyay7VTLPcRACV7i"  # Replace with your Stripe's premium plan ID
     user_subscription.save()
 
     messages.success(request, 'Your payment was successful!')
@@ -413,7 +413,8 @@ def stripe_webhook(request):
                 subscription = Subscription.objects.create(
                     user_profile=user_profile,
                     start_date=timezone.now(),
-                    end_date=timezone.now() + timedelta(days=30),
+                    # end_date=timezone.now() + timedelta(days=30),
+                    end_date=timezone.now() + timedelta(minutes=3),
                     status='active',
                 )
 
@@ -445,6 +446,39 @@ def stripe_webhook(request):
 
             subscription.status = 'canceled'
             subscription.save()
+
+        if event['type'] == 'invoice.payment_succeeded':
+            # Fetch relevant data
+            invoice = event['data']['object']
+            payment_amount = invoice['amount_paid'] / 100  # Convert cents to dollars
+            
+            # Try to get customer email from the invoice object
+            customer_email = invoice.get('customer_email')
+            
+            # If email isn't in the invoice, try to get it from the customer object
+            if not customer_email:
+                try:
+                    customer = stripe.Customer.retrieve(invoice['customer'])
+                    customer_email = customer.get('email', 'test@example.com')
+                except Exception as e:
+                    logger.error(f"Error retrieving customer: {e}")
+                    return JsonResponse({'status': 'failure', 'error': 'Error retrieving customer.'}, status=400)
+            
+            # Log a warning if using the default email
+            if customer_email == 'test@example.com':
+                logger.warning("No customer email found in the invoice. Using default email for testing.")
+            
+            # Continue processing the event with the retrieved (or default) email
+            try:
+                user = User.objects.get(email=customer_email)
+            except User.DoesNotExist:
+                logger.error(f"No user found for the email {customer_email}.")
+                return JsonResponse({'status': 'failure', 'error': f'User with email {customer_email} does not exist.'}, status=400)
+
+            activity_message = f"Recurring payment of ${payment_amount} was successful!"
+            ActivityLog.objects.create(user=user, activity=activity_message)
+            logger.info(activity_message)
+
 
     except Exception as e:
         traceback.print_exc()
@@ -529,7 +563,7 @@ def delete_account(request):
     # Delete the user's account
     user.delete()
 
-    messages.success(request, "Account successfully deleted.")
+    # messages.success(request, "Account successfully deleted.")
     return redirect('/')  # Or wherever you want to redirect after account deletion
 
 
@@ -561,7 +595,7 @@ def downgrade_subscription(request):
 
     # Assuming you've saved the user's new subscription status:
     user_subscription = Subscription.objects.get(user_profile=user_profile)
-    user_subscription.stripe_plan_id = "free_plan_id"  # Replace with your Stripe's free plan ID
+    user_subscription.stripe_plan_id = "price_1NmG4RCOAyay7VTLqfqUxOud"  # Replace with your Stripe's free plan ID
     user_subscription.save()
 
     messages.success(request, "Successfully downgraded to Free plan.")
