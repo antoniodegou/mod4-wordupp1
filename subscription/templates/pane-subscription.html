@@ -59,9 +59,13 @@
           Warning: Deleting your account will also cancel your subscription and remove all associated data. This action is irreversible. Are you sure you want to proceed?
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-lg rounded-0" data-bs-dismiss="modal">Close</button>
-          <a href="{% url 'delete_account' %}" class="btn btn-danger btn-lg rounded-0">Delete My Account</a>
+            <button type="button" class="btn btn-secondary btn-lg rounded-0" data-bs-dismiss="modal">Close</button>
+            <form action="{% url 'delete_account' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-lg rounded-0">Delete My Account</button>
+            </form>
         </div>
+        
       </div>
     </div>
   </div>

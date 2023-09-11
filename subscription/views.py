@@ -137,29 +137,7 @@ def create_stripe_checkout_session(stripe_customer_id, price_id='price_1NmG4RCOA
         return None
 
 
-@login_required
-@require_POST
-def upgrade_subscription(request):
-    """Handle logic for upgrading a user's subscription to premium."""
-    user_profile, _ = get_or_create_user_profile(request.user)
-    handle_premium_plan(user_profile, 'price_1NmG4RCOAyay7VTLPcRACV7i', request)  # Replace with your premium plan ID
-    activity = ActivityLog(user=request.user, activity="Upgraded to the Premium plan.")
-    activity.save()
 
-    messages.success(request, 'Successfully upgraded to the Premium plan!')
-    return redirect('dashboard')
-
-@login_required
-@require_POST
-def downgrade_subscription(request):
-    """Handle logic for downgrading a user's subscription to free."""
-    user_profile, _ = get_or_create_user_profile(request.user)
-    handle_free_plan(user_profile, 'price_1NmG4RCOAyay7VTLqfqUxOud')  # Replace with your free plan ID
-    activity = ActivityLog(user=user_profile.user, activity="Downgraded to the Free plan.")
-    activity.save()
-
-    messages.success(request, 'Successfully downgraded to the Free plan.')
-    return redirect('dashboard')
 
 def handle_form_submission(form, user_profile,request):
     """
@@ -348,143 +326,169 @@ These functions are triggered by Stripe events and update the application state 
  
 
 
-
-
+"""
+stripe_webhook and request
+"""
 @csrf_exempt
 def stripe_webhook(request):
     logger.info("Received a Stripe webhook event.")
+    
     try:
         payload = request.body
         sig_header = request.META['HTTP_STRIPE_SIGNATURE']
-        event = None
-
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-            )
-        except ValueError as e:
-            return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
-        except stripe.error.SignatureVerificationError as e:
-            return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
-
-        if event['type'] == 'checkout.session.completed':
-            logger.info("Handling checkout.session.completed event.")
-            # print(f"Full Stripe event payload: {event}")
-            session = event['data']['object']
-            # Extracting the payment amount
-            payment_amount = session['amount_total'] / 100  # This gives the amount in dollars, assuming the currency is USD.
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
         
-            activity_message = f"Payment of ${payment_amount} was successful!"
-            ActivityLog.objects.create(user=user, activity=activity_message)
+        event_type = event['type']
 
+        if event_type == 'checkout.session.completed':
+            handle_checkout_session_completed(event)
 
+        elif event_type == 'customer.subscription.deleted':
+            handle_subscription_deleted(event)
 
-            if session.get('mode') != 'subscription':
-                logger.error("Received a session completed event that's not related to a subscription.")
-                return JsonResponse({'status': 'failure', 'error': 'Invalid session type'}, status=400)
-            # print(f"Session Data: {session}")
-            customer_id = session.get('customer')
-            logger.info(f"Customer ID: {customer_id}")
-            subscription_id = session.get('subscription')
-            if 'customer' not in session:
-                logger.info("Customer key missing in session data.")
-                return JsonResponse({'status': 'failure', 'error': 'Customer key missing'}, status=400)
-            
+        elif event_type == 'invoice.payment_succeeded':
+            handle_payment_succeeded(event)
 
-            if not customer_id or not subscription_id:
-                return JsonResponse({'status': 'failure'}, status=400)
-
-            stripe_subscription = stripe.Subscription.retrieve(subscription_id)
-            stripe_plan_id = stripe_subscription['plan']['id']
-            logger.info(f"HAAAYDEBUG: Stripe Plan ID from Webhook: {stripe_plan_id}")
-
-            customer = stripe.Customer.retrieve(customer_id)
-            try:
-                user = User.objects.get(email=customer.email)
-                user_profile = UserProfile.objects.get(user=user)
-            except (User.DoesNotExist, UserProfile.DoesNotExist):
-                return JsonResponse({'status': 'failure'}, status=400)
-
-            try:
-                subscription = Subscription.objects.get(user_profile=user_profile)
-                logger.info(f"Found existing subscription for user: {user.username}")
-            except Subscription.DoesNotExist:
-                logger.info(f"Creating new subscription for user: {user.username}")
-                subscription = Subscription.objects.create(
-                    user_profile=user_profile,
-                    start_date=timezone.now(),
-                    # end_date=timezone.now() + timedelta(days=30),
-                    end_date=timezone.now() + timedelta(minutes=3),
-                    status='active',
-                )
-
-            logger.info(f"Updating subscription for user: {user.username} with Plan ID: {stripe_plan_id}")
-            subscription.stripe_subscription_id = subscription_id
-            subscription.stripe_plan_id = stripe_plan_id
-            subscription.status = 'active'
-            subscription.save()
-            logger.info(f"Updated subscription for user: {user.username}")
-
-        elif event['type'] == 'customer.subscription.deleted':
-            session = event['data']['object']
-            customer_id = session.get('customer')
-
-            if not customer_id:
-                return JsonResponse({'status': 'failure'}, status=400)
-
-            customer = stripe.Customer.retrieve(customer_id)
-
-            try:
-                user = User.objects.get(email=customer.email)
-            except User.DoesNotExist:
-                return JsonResponse({'status': 'failure', 'error': f'User with email {customer.email} does not exist.'}, status=400)
-
-            try:
-                subscription = Subscription.objects.get(user=user)
-            except ObjectDoesNotExist:
-                return HttpResponse(status=400)
-
-            subscription.status = 'canceled'
-            subscription.save()
-
-        if event['type'] == 'invoice.payment_succeeded':
-            # Fetch relevant data
-            invoice = event['data']['object']
-            payment_amount = invoice['amount_paid'] / 100  # Convert cents to dollars
-            
-            # Try to get customer email from the invoice object
-            customer_email = invoice.get('customer_email')
-            
-            # If email isn't in the invoice, try to get it from the customer object
-            if not customer_email:
-                try:
-                    customer = stripe.Customer.retrieve(invoice['customer'])
-                    customer_email = customer.get('email', 'test@example.com')
-                except Exception as e:
-                    logger.error(f"Error retrieving customer: {e}")
-                    return JsonResponse({'status': 'failure', 'error': 'Error retrieving customer.'}, status=400)
-            
-            # Log a warning if using the default email
-            if customer_email == 'test@example.com':
-                logger.warning("No customer email found in the invoice. Using default email for testing.")
-            
-            # Continue processing the event with the retrieved (or default) email
-            try:
-                user = User.objects.get(email=customer_email)
-            except User.DoesNotExist:
-                logger.error(f"No user found for the email {customer_email}.")
-                return JsonResponse({'status': 'failure', 'error': f'User with email {customer_email} does not exist.'}, status=400)
-
-            activity_message = f"Recurring payment of ${payment_amount} was successful!"
-            ActivityLog.objects.create(user=user, activity=activity_message)
-            logger.info(activity_message)
-
-
+    except ValueError as e:
+        return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return JsonResponse({'status': 'failure', 'error': str(e)}, status=400)
     except Exception as e:
         traceback.print_exc()
         return JsonResponse({'status': 'failure', 'error': str(e)}, status=500)
 
     return JsonResponse({'status': 'success'})
+
+
+"""
+get_user_from_customer and customer_id
+"""
+def get_user_from_customer(customer_id):
+    customer = stripe.Customer.retrieve(customer_id)
+    try:
+        return User.objects.get(email=customer.email)
+    except User.DoesNotExist:
+        logger.error(f"No user found for the email {customer.email}.")
+        return None
+
+
+"""
+handle_checkout_session_completed and event
+"""
+def handle_checkout_session_completed(event):
+    logger.info("Handling checkout.session.completed event.")
+    
+    session = event['data']['object']
+    user = get_user_from_customer(session.get('customer'))
+    
+    handle_successful_payment(user, session)
+    handle_subscription(user, session)
+
+
+"""
+handle_successful_payment and user, session
+"""
+def handle_successful_payment(user, session):
+    payment_amount = session['amount_total'] / 100  # Convert to dollars
+    if user:
+        activity_message = f"Payment of ${payment_amount} was successful!"
+        ActivityLog.objects.create(user=user, activity=activity_message)
+    if session.get('mode') != 'subscription':
+        logger.error("Received a session completed event that's not related to a subscription.")
+        return JsonResponse({'status': 'failure', 'error': 'Invalid session type'}, status=400)
+
+
+"""
+handle_subscription and user, session
+"""
+def handle_subscription(user, session):
+    customer_id = session.get('customer')
+    if not customer_id:
+        logger.info("Customer key missing in session data.")
+        return JsonResponse({'status': 'failure', 'error': 'Customer key missing'}, status=400)
+
+    subscription_id = session.get('subscription')
+    if not subscription_id:
+        return JsonResponse({'status': 'failure'}, status=400)
+
+    stripe_subscription = stripe.Subscription.retrieve(subscription_id)
+    stripe_plan_id = stripe_subscription['plan']['id']
+    logger.info(f"Stripe Plan ID from Webhook: {stripe_plan_id}")
+
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({'status': 'failure'}, status=400)
+
+    try:
+        subscription = Subscription.objects.get(user_profile=user_profile)
+        logger.info(f"Found existing subscription for user: {user.username}")
+    except Subscription.DoesNotExist:
+        logger.info(f"Creating new subscription for user: {user.username}")
+        subscription = Subscription.objects.create(
+            user_profile=user_profile,
+            start_date=timezone.now(),
+            end_date=timezone.now() + timedelta(minutes=3),
+            status='active',
+        )
+
+    logger.info(f"Updating subscription for user: {user.username} with Plan ID: {stripe_plan_id}")
+    subscription.stripe_subscription_id = subscription_id
+    subscription.stripe_plan_id = stripe_plan_id
+    subscription.status = 'active'
+    subscription.save()
+    logger.info(f"Updated subscription for user: {user.username}")
+
+
+"""
+handle_subscription_deleted and event
+"""
+def handle_subscription_deleted(event):
+    session = event['data']['object']
+    customer_id = session.get('customer')
+
+    if not customer_id:
+        return JsonResponse({'status': 'failure'}, status=400)
+
+    user = get_user_from_customer(customer_id)
+    if not user:
+        return JsonResponse({'status': 'failure', 'error': f'User not found for customer ID {customer_id}.'}, status=400)
+
+    try:
+        subscription = Subscription.objects.get(user=user)
+    except ObjectDoesNotExist:
+        return HttpResponse(status=400)
+
+    subscription.status = 'canceled'
+    subscription.save()
+    logger.info(f"Subscription for user {user.username} has been canceled.")
+
+
+"""
+handle_payment_succeeded and event
+"""
+def handle_payment_succeeded(event):
+    invoice = event['data']['object']
+    payment_amount = invoice['amount_paid'] / 100  # Convert cents to dollars
+    
+    customer_email = invoice.get('customer_email')
+    if not customer_email:
+        customer_id = invoice.get('customer')
+        user = get_user_from_customer(customer_id)
+    else:
+        try:
+            user = User.objects.get(email=customer_email)
+        except User.DoesNotExist:
+            logger.error(f"No user found for the email {customer_email}.")
+            return JsonResponse({'status': 'failure', 'error': f'User with email {customer_email} does not exist.'}, status=400)
+
+    activity_message = f"Recurring payment of ${payment_amount} was successful!"
+    ActivityLog.objects.create(user=user, activity=activity_message)
+    logger.info(activity_message)
+
+
 
 
 # This could be part of your register_view or another view
@@ -539,32 +543,63 @@ FOR USER SUBSCRIPTION DASHBOARD
 """
 
 
+# @login_required
+# def delete_account(request):
+#     """
+#     Handle account and subscription deletion for the logged-in user.
+#     """
+#     user = request.user
+
+#     # Cancel user's Stripe subscription if exists
+#     try:
+#         user_profile = UserProfile.objects.get(user=user)
+#         customer_id = user_profile.stripe_customer_id
+#         subscriptions = stripe.Customer.list_subscriptions(customer_id)
+#         for sub in subscriptions['data']:
+#             stripe.Subscription.delete(sub.id)
+#     except Exception as e:
+#         logger.error(f"Failed to delete Stripe subscription: {e}")
+
+#     # Delete the user's associated data here, if any
+#     # For example, you might have other models tied to the user
+#     # that you'd like to delete or modify.
+
+#     # Delete the user's account
+#     user.delete()
+
+#     # messages.success(request, "Account successfully deleted.")
+#     return redirect('/')  # Or wherever you want to redirect after account deletion
+
 @login_required
 def delete_account(request):
-    """
-    Handle account and subscription deletion for the logged-in user.
-    """
-    user = request.user
+    # Check if the request method is POST (to avoid accidental deletions)
+    if request.method == 'POST':
+        
+        # Ensure the user is authenticated
+        if request.user.is_authenticated:
+            
+            # Get the user object
+            user_to_delete = request.user
+            
+            # Delete the user (this will also handle cascade deletes if set up in models)
+            user_to_delete.delete()
+            
+            # Show a success message (optional)
+            messages.success(request, 'Your account has been deleted successfully.')
+            deleted_user = User.objects.filter(username=user_to_delete.username).first()
+            print("Deleted user:", deleted_user)
+            # Redirect to home page or any other page after successful deletion
+            return redirect('/')  # Replace 'home' with the name of the desired redirect URL pattern
 
-    # Cancel user's Stripe subscription if exists
-    try:
-        user_profile = UserProfile.objects.get(user=user)
-        customer_id = user_profile.stripe_customer_id
-        subscriptions = stripe.Customer.list_subscriptions(customer_id)
-        for sub in subscriptions['data']:
-            stripe.Subscription.delete(sub.id)
-    except Exception as e:
-        logger.error(f"Failed to delete Stripe subscription: {e}")
+        else:
+            messages.error(request, 'You do not have permission to delete this account.')
+            return redirect('login')  # Redirect to login page
 
-    # Delete the user's associated data here, if any
-    # For example, you might have other models tied to the user
-    # that you'd like to delete or modify.
+    else:
+        # If not a POST request, redirect to a confirmation page or show an error
+        messages.error(request, 'Invalid request.')
+        return redirect('login')  # Replace 'account' with the name of the user's account page URL pattern
 
-    # Delete the user's account
-    user.delete()
-
-    # messages.success(request, "Account successfully deleted.")
-    return redirect('/')  # Or wherever you want to redirect after account deletion
 
 
 @login_required
@@ -602,3 +637,28 @@ def downgrade_subscription(request):
     activity = ActivityLog(user=request.user, activity="Downgraded to the Free plan.")
     activity.save()
     return redirect('dashboard')
+
+
+# @login_required
+# @require_POST
+# def upgrade_subscription(request):
+#     """Handle logic for upgrading a user's subscription to premium."""
+#     user_profile, _ = get_or_create_user_profile(request.user)
+#     handle_premium_plan(user_profile, 'price_1NmG4RCOAyay7VTLPcRACV7i', request)  # Replace with your premium plan ID
+#     activity = ActivityLog(user=request.user, activity="Upgraded to the Premium plan.")
+#     activity.save()
+
+#     messages.success(request, 'Successfully upgraded to the Premium plan!')
+#     return redirect('dashboard')
+
+# @login_required
+# @require_POST
+# def downgrade_subscription(request):
+#     """Handle logic for downgrading a user's subscription to free."""
+#     user_profile, _ = get_or_create_user_profile(request.user)
+#     handle_free_plan(user_profile, 'price_1NmG4RCOAyay7VTLqfqUxOud')  # Replace with your free plan ID
+#     activity = ActivityLog(user=user_profile.user, activity="Downgraded to the Free plan.")
+#     activity.save()
+
+#     messages.success(request, 'Successfully downgraded to the Free plan.')
+#     return redirect('dashboard')
